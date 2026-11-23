@@ -1,0 +1,40 @@
+/* Air Roam design tokens (docs/superpowers/specs/2026-11-23-air-roam-design-tokens.md).
+   Apps: @import "tailwindcss"; @import "@air-roam/ui/theme.css"; @source "<path>/packages/ui/src"; */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #0b6e6a;
+  --color-on-primary: #ffffff;
+  --color-primary-soft: #e0f5f2;
+  --color-background: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-border: #e0e5eb;
+  --color-ink: #12202a;
+  --color-muted: #596b75;
+  --color-danger: #c62828;
+  --color-danger-soft: #fdecec;
+  --color-neutral: #596b75;
+  --color-neutral-soft: #eef1f4;
+  --color-success: #2e7d32;
+  --color-success-soft: #e6f4ea;
+
+  --radius-card: 20px;
+  --radius-input: 16px;
+  --radius-button: 12px;
+  --radius-tile: 8px;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}

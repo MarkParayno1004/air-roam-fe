@@ -1,0 +1,14 @@
+{
+  "name": "@air-roam/store",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev --port 5173",
+    "build": "react-router build && node scripts/write-seo-files.ts",
+    "typegen": "react-router typegen"
+  },
+  "dependencies": {
+    "@react-router/node": "^7.18.6",
+    "isbot": "^5.2.3"
+  }
+}
