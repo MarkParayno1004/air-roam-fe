@@ -17,7 +17,7 @@ const line = (over: Record<string, unknown> = {}) => ({
   unit_price: "799.00", rental_days: null, line_total: "799.00", booking: null, ...over,
 });
 const order = (lines: unknown[], over: Record<string, unknown> = {}) =>
-  ({ id: "7f3c2a91-aaaa", order_status: "paid", client: "web", currency: "PHP", total_amount: "2899.00", delivery_fee: "0.00", xendit_invoice_url: null, paid_at: future(-1), created_at: future(-1), updated_at: future(-1), lines, ...over }) as unknown as Order;
+  ({ id: "7f3c2a91-aaaa", order_status: "paid", client: "web", currency: "PHP", total_amount: "2899.00", delivery_fee: "0.00", payment_url: null, paid_at: future(-1), created_at: future(-1), updated_at: future(-1), lines, ...over }) as unknown as Order;
 
 function client(request = vi.fn()) {
   return {
@@ -58,7 +58,7 @@ test("paid eSIM line starts on activation with no date links; unpaid order offer
   expect(screen.getByText("Air Roam eSIM · Japan 10GB · 7 days")).toBeInTheDocument();
   expect(screen.queryByRole("link")).not.toBeInTheDocument();
   unmount();
-  wrap(client(), <OrderCard order={order([line()], { order_status: "pending_payment", xendit_invoice_url: "https://x/inv" })} />);
+  wrap(client(), <OrderCard order={order([line()], { order_status: "pending_payment", payment_url: "https://x/inv" })} />);
   expect(screen.getByRole("link", { name: "Pay now" })).toHaveAttribute("href", "https://x/inv");
 });
 
@@ -66,7 +66,7 @@ test("cancelling refreshes this order and reports failures", async () => {
   const request = vi.fn().mockRejectedValueOnce(new ApiError(400, {}, "invalid_transition", "Only unpaid orders can be cancelled."));
   const qc = new QueryClient();
   const spy = vi.spyOn(qc, "invalidateQueries");
-  const unpaid = order([line()], { order_status: "pending_payment", xendit_invoice_url: "https://x/inv" });
+  const unpaid = order([line()], { order_status: "pending_payment", payment_url: "https://x/inv" });
   render(
     <QueryClientProvider client={qc}>
       <MemoryRouter>

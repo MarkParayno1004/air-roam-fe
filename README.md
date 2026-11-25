@@ -28,7 +28,7 @@ npm run dev -w apps/admin     # http://localhost:5174
 ```powershell
 npm test                      # Vitest unit/component tests (all workspaces)
 npm run typecheck
-npx playwright test           # end-to-end: store + live backend (POST /orders mocked; no Xendit key needed)
+npx playwright test           # end-to-end: store + live backend (POST /orders mocked; no PayMongo key needed)
 npm run build                 # store: pre-renders the store pages (backend must be running) + sitemap/robots; admin: static bundle
 ```
 

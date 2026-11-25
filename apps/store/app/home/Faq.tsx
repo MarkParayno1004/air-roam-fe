@@ -10,7 +10,7 @@ function faqs(types: string[]) {
   const wifi = types.includes("pocket_wifi");
   const all: Array<[string, Array<string | false>]> = [
     ["When do my days start?", [plansAs.length > 0 && `${allOf(plansAs)} days start when you activate the plan, not when you buy it.`, wifi && "Pocket WiFi is rented for the dates you choose."]],
-    ["How can I pay?", ["Pay through Xendit with a card, GCash or Maya. Every price is in Philippine pesos (PHP)."]],
+    ["How can I pay?", ["Pay through PayMongo with GCash, Maya, QR Ph or card. Every price is in Philippine pesos (PHP)."]],
     ["How do I get it?", [
       types.includes("esim") && "An eSIM is installed on your phone before you fly.",
       types.includes("sim") && "A SIM is delivered to you in the Philippines.",

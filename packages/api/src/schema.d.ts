@@ -696,7 +696,7 @@ export interface components {
             /** Format: decimal */
             readonly total_amount: string;
             /** Format: uri */
-            readonly xendit_invoice_url: string | null;
+            readonly payment_url: string | null;
             /** Format: date-time */
             readonly paid_at: string | null;
             /** Format: date-time */
@@ -1101,7 +1101,7 @@ export interface components {
             /** Format: decimal */
             readonly total_amount: string;
             /** Format: uri */
-            readonly xendit_invoice_url: string | null;
+            readonly payment_url: string | null;
             /** Format: date-time */
             readonly paid_at: string | null;
             /** Format: date-time */
@@ -1110,7 +1110,7 @@ export interface components {
             readonly updated_at: string;
             readonly lines: components["schemas"]["OrderLine"][];
             readonly user: components["schemas"]["OrderCustomer"];
-            xendit_invoice_id?: string | null;
+            payment_session_id?: string | null;
             needs_attention?: boolean;
             attention_note?: string;
         };

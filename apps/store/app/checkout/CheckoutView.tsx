@@ -90,9 +90,9 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
         <Card className="flex h-fit flex-col gap-4 p-6">
           <h2 className="text-[17px] font-semibold">Payment</h2>
           <TotalRows totals={totals} />
-          <Button size="lg" onClick={onPay} disabled={!valid || pending}>Pay with Xendit</Button>
+          <Button size="lg" onClick={onPay} disabled={!valid || pending}>Pay securely</Button>
           {!valid && <p className="text-sm text-danger">Some items need attention. <Link to="/cart" className="font-semibold">Back to cart</Link></p>}
-          <p className="text-xs text-muted">You'll pay on Xendit's secure page — cards, GCash, Maya and more. Charged in PHP.</p>
+          <p className="text-xs text-muted">You'll pay on PayMongo's secure page: GCash, Maya, QR Ph or card. Charged in PHP.</p>
           <p className="text-xs text-muted">By paying you agree to the <Link to="/terms" className="text-primary">Terms</Link> and <Link to="/refund-policy" className="text-primary">Refund policy</Link>.</p>
         </Card>
       </div>

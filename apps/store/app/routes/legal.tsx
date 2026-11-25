@@ -1,19 +1,19 @@
 import { useLocation } from "react-router";
 import { buildMeta } from "../seo/meta";
 
-/** Placeholder legal/contact copy — replace with the reviewed text before Xendit merchant approval. */
+/** Placeholder legal/contact copy — replace with the reviewed text before PayMongo merchant approval. */
 const PAGES: Record<string, { title: string; body: string[] }> = {
   "/terms": {
     title: "Terms of service",
     body: [
-      "Air Roam sells roaming data plans (eSIM, SIM) and Pocket WiFi rentals to travelers. Prices are in Philippine pesos (PHP) and payments are processed by Xendit.",
+      "Air Roam sells roaming data plans (eSIM, SIM) and Pocket WiFi rentals to travelers. Prices are in Philippine pesos (PHP) and payments are processed by PayMongo (GCash, Maya, QR Ph or card).",
       "Pocket WiFi rental dates are final once ordered; contact support to change them. eSIM and SIM plan days start when the plan is activated. Pocket WiFi orders of 7 days or fewer in total have a ₱200 delivery fee.",
     ],
   },
   "/privacy": {
     title: "Privacy policy",
     body: [
-      "We collect your name, email, contact number and address to create your account and fulfil your orders. Card and wallet details are entered on Xendit's page and never stored by Air Roam.",
+      "We collect your name, email, contact number and address to create your account and fulfil your orders. Card and wallet details are entered on PayMongo's page and never stored by Air Roam.",
     ],
   },
   "/refund-policy": {

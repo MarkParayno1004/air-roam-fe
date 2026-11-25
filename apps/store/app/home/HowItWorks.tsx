@@ -4,7 +4,7 @@ export function HowItWorks({ types }: { types: string[] }) {
   const plansAs = planTypes(types);
   const steps = [
     ["Choose your country", "See its plans, all priced in PHP. Add one to your cart."],
-    ["Pay with Xendit", "Log in or create an account, then pay with a card, GCash or Maya."],
+    ["Pay securely", "Log in or create an account, then pay with GCash, Maya, QR Ph or card."],
     ["Get connected", `${howYouGetIt(types)} ${plansAs.length > 0 ? `${allOf(plansAs)} days start on activation.` : ""}`],
   ];
   return (

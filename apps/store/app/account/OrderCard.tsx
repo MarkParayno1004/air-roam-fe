@@ -38,8 +38,8 @@ export function OrderCard({ order }: { order: Order }) {
       </ul>
       {order.order_status === "pending_payment" && (
         <div className="flex flex-wrap gap-3">
-          {order.xendit_invoice_url && (
-            <a href={order.xendit_invoice_url} className="inline-flex h-10 items-center rounded-button bg-primary px-5 text-sm font-semibold text-on-primary">Pay now</a>
+          {order.payment_url && (
+            <a href={order.payment_url} className="inline-flex h-10 items-center rounded-button bg-primary px-5 text-sm font-semibold text-on-primary">Pay now</a>
           )}
           <Button variant="secondary" onClick={cancel} disabled={busy}>Cancel order</Button>
         </div>

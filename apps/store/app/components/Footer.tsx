@@ -16,7 +16,7 @@ export function Footer() {
           <p className="text-[13px] leading-5 text-muted">
             Roaming data for travelers — eSIM, SIM and Pocket WiFi rental.
             <br />
-            Payments secured by Xendit · Prices in PHP
+            Payments secured by PayMongo · Prices in PHP
           </p>
         </div>
         {COLS.map(([title, links]) => (

@@ -6,7 +6,7 @@ import { fakeClient, page, renderAdmin, staff } from "../../test-utils";
 
 const order = {
   id: "7f3c2a91-0000-0000-0000-000000000000", order_status: "paid", client: "web", currency: "PHP", total_amount: "2899.00",
-  xendit_invoice_url: "https://checkout.xendit.co/inv_1", xendit_invoice_id: "inv_1", paid_at: "2026-11-23T10:00:00+08:00",
+  payment_url: "https://checkout.paymongo.com/cs_1", payment_session_id: "cs_1", paid_at: "2026-11-23T10:00:00+08:00",
   created_at: "2026-11-23T09:00:00+08:00", updated_at: "2026-11-23T10:00:00+08:00", needs_attention: false, attention_note: "",
   user: { id: "u1", email: "traveler@example.com", first_name: "Alex", last_name: "Santos", contact_no: "+63917" },
   lines: [{ id: "l1", product_name_snapshot: "Air Roam Pocket WiFi", variant_name_snapshot: "Japan", product_type_snapshot: "pocket_wifi", pricing_unit_snapshot: "per_day", countries_snapshot: ["JP"], quantity: 1, unit_price: "350.00", rental_days: 6, line_total: "2100.00", booking: { id: "b1", booking_status: "confirmed", start_at: "2026-12-12T00:00:00+08:00", end_at: "2026-12-18T00:00:00+08:00", destination_country_codes: ["JP"] } }],
@@ -26,7 +26,7 @@ test.each([
 test("marketing sees order details without action buttons", async () => {
   renderAdmin(`/orders/${order.id}`, fakeClient(staff(["marketing"]), () => Promise.resolve(order)));
   expect(await screen.findByText("traveler@example.com")).toBeInTheDocument();
-  expect(screen.getByText("inv_1")).toBeInTheDocument();
+  expect(screen.getByText("cs_1")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Change status" })).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Delete order" })).not.toBeInTheDocument();
 });
@@ -42,6 +42,21 @@ test("admin status change error is shown", async () => {
   await userEvent.selectOptions(screen.getByLabelText("New status"), "fulfilled");
   await userEvent.click(screen.getByRole("button", { name: "Apply" }));
   expect(await screen.findByText("An order can't go from paid to fulfilled.")).toBeInTheDocument();
+});
+
+test("an unpaid order can't be deleted; a refused change reloads the order", async () => {
+  let status = "pending_payment";
+  const client = fakeClient(staff(["admin"]), (_, o) => {
+    if ((o as { method?: string } | undefined)?.method !== "PATCH") return Promise.resolve({ ...order, order_status: status });
+    status = "paid"; // the customer paid while staff were cancelling
+    return Promise.reject(new ApiError(409, {}, "invalid_transition", "This order just became paid."));
+  });
+  renderAdmin(`/orders/${order.id}`, client);
+  await userEvent.click(await screen.findByRole("button", { name: "Change status" }));
+  expect(screen.queryByRole("button", { name: "Delete order" })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+  expect(await screen.findByText("This order just became paid.")).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Delete order" })).toBeInTheDocument(); // now shown as paid
 });
 
 test("orders list shows rows and filters by status", async () => {

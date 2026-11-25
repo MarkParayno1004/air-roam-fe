@@ -24,15 +24,17 @@ export function OrderDetail() {
   if (!o) return <p className="text-muted">Loading…</p>;
   const options = nextStatuses(o.order_status);
 
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ["staff-order", id] }), qc.invalidateQueries({ queryKey: ["staff-orders"] })]);
+
   async function apply() {
     setError(null);
+    setChanging(false);
     try {
       await client.request(`staff/orders/${id}`, { method: "PATCH", json: { order_status: next } });
-      setChanging(false);
-      await Promise.all([qc.invalidateQueries({ queryKey: ["staff-order", id] }), qc.invalidateQueries({ queryKey: ["staff-orders"] })]);
     } catch (e) {
-      setError(errorMessage(e));
+      setError(errorMessage(e)); // e.g. the customer paid meanwhile
     }
+    await refresh();
   }
 
   async function remove() {
@@ -41,6 +43,7 @@ export function OrderDetail() {
       await qc.invalidateQueries({ queryKey: ["staff-orders"] });
       navigate("/orders");
     } catch (e) {
+      setConfirmDelete(false); // the message is on the page behind it
       setError(errorMessage(e));
     }
   }
@@ -56,11 +59,11 @@ export function OrderDetail() {
         {isAdmin && (
           <div className="flex gap-2">
             {options.length > 0 && <Button size="sm" onClick={() => { setChanging(true); setNext(options[0]); }}>Change status</Button>}
-            <Button size="sm" variant="secondary" className="text-danger" onClick={() => setConfirmDelete(true)}>Delete order</Button>
+            {o.order_status !== "pending_payment" && <Button size="sm" variant="secondary" className="text-danger" onClick={() => setConfirmDelete(true)}>Delete order</Button>}
           </div>
         )}
       </div>
-      {o.needs_attention && <Notice tone="red" title="Payment needs review">{o.attention_note}</Notice>}
+      {o.needs_attention && <Notice tone="red" title="Payment needs review"><p className="whitespace-pre-line">{o.attention_note}</p></Notice>}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       {changing && (
         <Card className="flex flex-wrap items-end gap-3 p-4">
@@ -72,7 +75,7 @@ export function OrderDetail() {
           </label>
           <Button onClick={apply}>Apply</Button>
           <Button variant="secondary" onClick={() => setChanging(false)}>Cancel</Button>
-          {next === "cancelled" || next === "refunded" ? <p className="w-full text-xs text-muted">This also cancels the order's bookings. Refund the money in the Xendit dashboard.</p> : null}
+          {next === "cancelled" || next === "refunded" ? <p className="w-full text-xs text-muted">This also cancels the order's bookings. Refund the money in the PayMongo dashboard.</p> : null}
         </Card>
       )}
       {confirmDelete && <ConfirmDialog title="Delete this order?" message="It disappears from lists (soft delete). The record stays in the database." onConfirm={remove} onCancel={() => setConfirmDelete(false)} />}
@@ -106,10 +109,10 @@ export function OrderDetail() {
             <p className="text-muted">{o.user.contact_no || "No contact number"}</p>
           </Card>
           <Card className="flex flex-col gap-1 p-6 text-sm">
-            <h2 className="mb-2 font-semibold">Payment (Xendit)</h2>
-            <p className="text-muted">Invoice</p>
-            <p className="break-all">{o.xendit_invoice_id ?? "—"}</p>
-            {o.xendit_invoice_url && <a href={o.xendit_invoice_url} target="_blank" rel="noreferrer" className="text-primary">Open invoice</a>}
+            <h2 className="mb-2 font-semibold">Payment (PayMongo)</h2>
+            <p className="text-muted">Checkout session</p>
+            <p className="break-all">{o.payment_session_id ?? "—"}</p>
+            {o.payment_url && <a href={o.payment_url} target="_blank" rel="noreferrer" className="text-primary">Open payment page</a>}
             <p className="mt-2 text-muted">Paid at</p>
             <p>{o.paid_at ? formatDate(o.paid_at) : "Not paid"}</p>
             <p className="mt-2 text-muted">Created</p>

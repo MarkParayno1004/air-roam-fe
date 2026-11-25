@@ -37,9 +37,9 @@ function wrap(c: ApiClient, ui: ReactNode, lines: CartLine[] = [esim]) {
   );
 }
 
-const pay = async () => userEvent.click(await screen.findByRole("button", { name: "Pay with Xendit" }));
+const pay = async () => userEvent.click(await screen.findByRole("button", { name: "Pay securely" }));
 
-test("no change → straight to Xendit, cart cleared", async () => {
+test("no change → straight to PayMongo, cart cleared", async () => {
   const onRedirect = vi.fn();
   const c = client(() => Promise.resolve({ order: order(), invoice_url: "https://x/inv", price_updates: [], removed_lines: [] }));
   wrap(c, <CheckoutView onRedirect={onRedirect} />);
@@ -108,7 +108,7 @@ test("double submit creates one order", async () => {
   let resolve: (v: unknown) => void = () => {};
   const c = client(() => new Promise((r) => (resolve = r)));
   wrap(c, <CheckoutView onRedirect={vi.fn()} />);
-  const button = await screen.findByRole("button", { name: "Pay with Xendit" });
+  const button = await screen.findByRole("button", { name: "Pay securely" });
   await userEvent.dblClick(button);
   expect(await screen.findByText("Updating to the latest prices, please hold on…")).toBeInTheDocument();
   resolve({ order: order(), invoice_url: "u", price_updates: [], removed_lines: [] });
@@ -128,4 +128,12 @@ test("payment result gives up after the time limit", async () => {
   const c = client(() => Promise.resolve(order()));
   wrap(c, <PaymentResultView orderId="o1" intervalMs={5} maxWaitMs={30} />);
   expect(await screen.findByText(/Still processing/)).toBeInTheDocument();
+});
+
+test("payment result offers Pay now only once the wait for a payment is over", async () => {
+  const c = client(() => Promise.resolve(order({ payment_url: "https://checkout.paymongo.com/cs_1" })));
+  wrap(c, <PaymentResultView orderId="o1" intervalMs={10} maxWaitMs={150} />);
+  expect(await screen.findByText("Confirming your payment…")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Pay now" })).not.toBeInTheDocument(); // they may have just paid
+  expect(await screen.findByRole("link", { name: "Pay now" })).toHaveAttribute("href", "https://checkout.paymongo.com/cs_1");
 });
