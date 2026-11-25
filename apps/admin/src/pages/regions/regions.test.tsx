@@ -94,54 +94,90 @@ test("editing after a save clears the Saved message", async () => {
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
-test("adding a Pocket WiFi plan prefills 1 GB for Regular and posts for_wifi", async () => {
-  const write = vi.fn().mockResolvedValue(undefined);
+const addWifi = async (write: Parameters<typeof regionClient>[0]) => {
   renderAdmin("/regions/r1", regionClient(write));
   await userEvent.click(await screen.findByRole("button", { name: "Add Pocket WiFi plan" }));
+};
+const wifiClient = (over: Partial<typeof wifiPlan>, write: (path: string, opts: Opts) => unknown) =>
+  fakeClient(staff(["marketing"]), (p, o) => ((o as Opts)?.method ? write(p, o as Opts) : Promise.resolve({ ...region, plans: [{ ...wifiPlan, ...over }] })));
+const choose = (name: string) => userEvent.selectOptions(screen.getByLabelText("Plan"), name);
+const save = () => userEvent.click(screen.getByRole("button", { name: "Save plan" }));
+
+test("a new Pocket WiFi plan starts as Unlimited, with no GB field", async () => {
+  const write = vi.fn().mockResolvedValue(undefined);
+  await addWifi(write);
   expect(screen.getByRole("button", { name: "Add plan" })).toBeInTheDocument(); // the other card stays
-  await userEvent.type(screen.getByLabelText("Plan"), "Regular");
-  expect(screen.getByLabelText("GB per day")).toHaveValue("1");
-  await userEvent.type(screen.getByLabelText("Price per day (PHP)"), "120");
-  await userEvent.click(screen.getByRole("button", { name: "Save plan" }));
-  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans", { method: "POST", json: { name: "Regular", data_mb: 1024, price: "120", is_active: true, for_wifi: true } });
+  expect(within(screen.getByLabelText("Plan")).getAllByRole("option").map((o) => o.textContent)).toEqual(["Unlimited", "Regular"]);
+  expect(screen.queryByLabelText("GB per day")).not.toBeInTheDocument();
+  expect(screen.getByText("Unlimited", { selector: "span" })).toBeInTheDocument();
+  await userEvent.type(screen.getByLabelText("Price per day (PHP)"), "350");
+  await save();
+  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans", { method: "POST", json: { name: "Unlimited", data_mb: null, price: "350", is_active: true, for_wifi: true } });
 });
 
-test("a typo in GB per day is rejected instead of becoming unlimited", async () => {
+test("Regular shows 1 GB; going back to Unlimited drops it", async () => {
+  const write = vi.fn().mockResolvedValue(undefined);
+  await addWifi(write);
+  await choose("Regular");
+  expect(screen.getByLabelText("GB per day")).toHaveValue("1");
+  await userEvent.type(screen.getByLabelText("Price per day (PHP)"), "120");
+  await save();
+  expect(write).toHaveBeenLastCalledWith("staff/regions/r1/plans", { method: "POST", json: { name: "Regular", data_mb: 1024, price: "120", is_active: true, for_wifi: true } });
+
+  await userEvent.click(await screen.findByRole("button", { name: /^Edit Regular/ }));
+  await choose("Unlimited");
+  await save();
+  expect(write).toHaveBeenLastCalledWith("staff/regions/r1/plans/w1", expect.objectContaining({ json: expect.objectContaining({ name: "Unlimited", data_mb: null }) }));
+});
+
+test.each([["abc", /Enter a number of GB/], ["", /Enter the GB per day/]])("Regular with GB %j is rejected instead of becoming unlimited", async (gb, message) => {
   const write = vi.fn();
-  renderAdmin("/regions/r1", regionClient(write));
-  await userEvent.click(await screen.findByRole("button", { name: "Add Pocket WiFi plan" }));
-  await userEvent.type(screen.getByLabelText("Plan"), "Regular");
+  await addWifi(write);
+  await choose("Regular");
   await userEvent.clear(screen.getByLabelText("GB per day"));
-  await userEvent.type(screen.getByLabelText("GB per day"), "abc");
-  await userEvent.click(screen.getByRole("button", { name: "Save plan" }));
-  expect(await screen.findByText(/Enter a number of GB/)).toBeInTheDocument();
+  if (gb) await userEvent.type(screen.getByLabelText("GB per day"), gb);
+  await save();
+  expect(await screen.findByText(message)).toBeInTheDocument();
   expect(write).not.toHaveBeenCalled();
 });
 
-test.each([
-  ["Unlimited after Regular is unlimited", ["Regular", "Unlimited"], null],
-  ["regular in any case is 1 GB", ["regular"], 1024],
-  ["Regular Plus gets no GB", ["Regular Plus"], null],
-])("%s", async (_, names, data_mb) => {
-  const write = vi.fn().mockResolvedValue(wifiPlan);
-  renderAdmin("/regions/r1", regionClient(write));
-  await userEvent.click(await screen.findByRole("button", { name: "Add Pocket WiFi plan" }));
-  for (const n of names) {
-    await userEvent.clear(screen.getByLabelText("Plan"));
-    await userEvent.type(screen.getByLabelText("Plan"), n);
-  }
-  await userEvent.type(screen.getByLabelText("Price per day (PHP)"), "300");
-  await userEvent.click(screen.getByRole("button", { name: "Save plan" }));
-  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans", expect.objectContaining({ json: expect.objectContaining({ data_mb }) }));
+test("a duplicate plan error shows under Plan", async () => {
+  await addWifi(vi.fn().mockRejectedValue(new ApiError(400, { name: ["This region already has a Pocket WiFi plan with this name."] })));
+  await save();
+  expect(await screen.findByText(/already has a Pocket WiFi plan/)).toBeInTheDocument();
+  expect(screen.getByLabelText("Plan")).toBeInvalid();
+  expect(screen.getByLabelText("Plan")).toHaveAccessibleDescription(/already has a Pocket WiFi plan/);
 });
 
-test("renaming an unlimited plan never adds a GB limit", async () => {
-  const write = vi.fn().mockResolvedValue(wifiPlan);
-  const unlimited = { ...wifiPlan, name: "Unlimited", label: "Unlimited", data_mb: null };
-  renderAdmin("/regions/r1", fakeClient(staff(["marketing"]), (p, o) => ((o as Opts)?.method ? write(p, o) : Promise.resolve({ ...region, plans: [unlimited] }))));
+test.each([
+  ["Regular", 2, ["Unlimited", "Regular"], "2"],
+  ["Plus", 3, ["Regular", "Plus"], "3"],
+  ["Plus", 3, ["Unlimited", "Plus"], "3"],
+  ["Plus", 3, ["Regular"], "1"],
+  ["Unlimited", 2, ["Regular", "Unlimited"], "2"],
+])("%s %iGB switched to %j has %s GB", async (name, gb, picks, shown) => {
+  renderAdmin("/regions/r1", wifiClient({ name, label: name, data_mb: gb * 1024 }, vi.fn()));
+  await userEvent.click(await screen.findByRole("button", { name: `Edit ${name}` }));
+  for (const pick of picks) await choose(pick);
+  expect(screen.getByLabelText("GB per day")).toHaveValue(shown);
+});
+
+test("a price edit on a capped plan named Unlimited keeps its cap", async () => {
+  const write = vi.fn().mockResolvedValue(undefined);
+  renderAdmin("/regions/r1", wifiClient({ name: "Unlimited", label: "Unlimited", data_mb: 2048 }, write));
   await userEvent.click(await screen.findByRole("button", { name: "Edit Unlimited" }));
-  await userEvent.clear(screen.getByLabelText("Plan"));
-  await userEvent.type(screen.getByLabelText("Plan"), "Regular");
-  await userEvent.click(screen.getByRole("button", { name: "Save plan" }));
-  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans/w1", { method: "PATCH", json: { name: "Regular", data_mb: null, price: "100.00", is_active: true, for_wifi: true } });
+  expect(screen.getByLabelText("GB per day")).toHaveValue("2");
+  await userEvent.clear(screen.getByLabelText("Price per day (PHP)"));
+  await userEvent.type(screen.getByLabelText("Price per day (PHP)"), "400");
+  await save();
+  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans/w1", expect.objectContaining({ json: expect.objectContaining({ name: "Unlimited", data_mb: 2048, price: "400" }) }));
+});
+
+test("a plan saved under another name keeps it and its GB", async () => {
+  const write = vi.fn().mockResolvedValue(undefined);
+  renderAdmin("/regions/r1", wifiClient({ name: "Plus", label: "Plus · 2GB/day", data_mb: 2048 }, write));
+  await userEvent.click(await screen.findByRole("button", { name: /^Edit Plus/ }));
+  expect(screen.getByLabelText("Plan")).toHaveValue("Plus");
+  await save();
+  expect(write).toHaveBeenCalledWith("staff/regions/r1/plans/w1", expect.objectContaining({ json: expect.objectContaining({ name: "Plus", data_mb: 2048 }) }));
 });
