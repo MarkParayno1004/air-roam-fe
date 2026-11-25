@@ -55,7 +55,7 @@ export function UserForm({ initial, onSave, onCancel }: { initial?: StaffUser | 
         <Field label="Last name" value={v.last_name} onChange={set("last_name")} error={errors.last_name} />
       </div>
       <Field label="Email" type="email" value={v.email} onChange={set("email")} error={errors.email} />
-      <Field label="Contact no." type="tel" value={v.contact_no} onChange={set("contact_no")} />
+      <Field label="Contact no." type="tel" maxLength={12} placeholder="+09*********" value={v.contact_no} onChange={set("contact_no")} />
       <Field label="Password" type="password" autoComplete="new-password" value={v.password} onChange={set("password")} error={errors.password} hint={creating ? "At least 10 characters" : "Leave empty to keep the current password"} />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium">Roles</legend>
