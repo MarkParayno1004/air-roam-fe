@@ -11,6 +11,10 @@
   --color-primary: #0b6e6a;
   --color-on-primary: #ffffff;
   --color-primary-soft: #e0f5f2;
+  /* highlight and what is selected; never as text on a light surface */
+  --color-accent: #fdb62b;
+  --color-on-accent: var(--color-ink);
+  --color-accent-soft: #fff5dd;
   --color-background: #f6f8fa;
   --color-surface: #ffffff;
   --color-border: #e0e5eb;
@@ -32,6 +36,10 @@
 @layer base {
   body {
     @apply bg-background text-ink font-sans antialiased;
+  }
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-on-accent);
   }
   :focus-visible {
     outline: 2px solid var(--color-primary);

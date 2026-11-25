@@ -6,19 +6,20 @@ import { DELIVERY_FEE, DELIVERY_FEE_MAX_DAYS, lineProblem, rentalDays, todayISO 
 import type { NewLine } from "../cart/store";
 import { Icon, type IconName } from "../components/icons";
 import { LockNote } from "../components/LockNote";
+import { perDay } from "./offers";
 import { TripTicket } from "./TripTicket";
 
 const ORDER = ["pocket_wifi", "esim", "sim"];
 const isWifi = (p: Product) => p.product_type === "pocket_wifi";
 const gb = (mb: number) => `${Number((mb / 1024).toFixed(2))}GB`;
 const dayCount = (n: number) => `${n} day${n === 1 ? "" : "s"}`;
-const perDay = (price: number | string) => `${formatPHP(price)}/day`;
 
 /** Choose a product, its plan and (Pocket WiFi) dates for one country, or for a whole region; the ticket sums it up. */
-export function PlanPicker({ products, destination: here, region, onAdd, children }: {
+export function PlanPicker({ products, destination: here, region, preferred = {}, onAdd, children }: {
   products: Product[];
   destination?: Destination; // with `region`: any of its countries, they share the plans
   region?: Destination["region"];
+  preferred?: { type?: string | null; planId?: string | null }; // preselected where sold, until the customer picks
   onAdd: (l: NewLine) => void;
   children?: ReactNode;
 }) {
@@ -42,10 +43,16 @@ export function PlanPicker({ products, destination: here, region, onAdd, childre
   const place = region?.name ?? here.country_name;
   const plansOf = (p: Product): Array<Plan | WifiPlan> => (isWifi(p) ? here.wifi_plans : here.plans);
   const sold = (p: Product) => plansOf(p).length > 0;
-  const selected = sorted.find((p) => p.id === chosenId && sold(p)) ?? sorted.find(sold);
+  const selected =
+    sorted.find((p) => p.id === chosenId && sold(p)) ??
+    sorted.find((p) => p.product_type === preferred.type && sold(p)) ??
+    (preferred.type === "esim" || preferred.type === "sim" ? sorted.find((p) => !isWifi(p) && sold(p)) : undefined) ?? // they share their plans
+    sorted.find(sold);
   const wifi = !!selected && isWifi(selected);
   const pickedId = selected && planIds[selected.id];
-  const plan = selected && (pickedId ? plansOf(selected).find((x) => x.id === pickedId) : plansOf(selected)[0]); // a picked plan that was withdrawn is not swapped for another
+  const wantedId = pickedId ?? preferred.planId;
+  // a picked plan, or a SIM/eSIM plan from the URL, that was withdrawn is not swapped for another
+  const plan = selected && (plansOf(selected).find((x) => x.id === wantedId) ?? (wantedId && (pickedId || !wifi) ? undefined : plansOf(selected)[0]));
   const days = wifi && start && end ? Math.max(0, rentalDays(start, end)) : 0;
 
   const line = selected && plan && {
@@ -178,7 +185,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
     <fieldset className="min-w-0">
       <legend className="mb-5">
         <h2 className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-          <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">{n}</span>
+          <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-on-accent">{n}</span>
           {title}
         </h2>
       </legend>
@@ -193,8 +200,8 @@ function Choice({ className, children, ...input }: InputHTMLAttributes<HTMLInput
     <label
       className={cn(
         "relative flex min-w-0 rounded-card border border-border transition-colors duration-150 motion-reduce:transition-none",
-        "has-checked:border-primary has-checked:ring-1 has-checked:ring-primary has-checked:ring-inset has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary",
-        input.disabled ? "cursor-not-allowed bg-background" : "cursor-pointer bg-surface hover:border-primary",
+        "has-checked:border-accent has-checked:ring-1 has-checked:ring-accent has-checked:ring-inset has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary",
+        input.disabled ? "cursor-not-allowed bg-background" : "cursor-pointer bg-surface not-has-checked:hover:border-primary has-checked:bg-accent-soft",
         className,
       )}
     >
@@ -202,7 +209,7 @@ function Choice({ className, children, ...input }: InputHTMLAttributes<HTMLInput
       <input type="radio" className="peer sr-only scroll-mt-24 scroll-mb-64" {...input} />
       {children}
       {!input.disabled && (
-        <span aria-hidden className="absolute right-4 bottom-4 flex size-5 items-center justify-center rounded-full border border-muted/60 text-transparent peer-checked:border-primary peer-checked:bg-primary peer-checked:text-on-primary">
+        <span aria-hidden className="absolute right-4 bottom-4 flex size-5 items-center justify-center rounded-full border border-muted/60 text-transparent peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent">
           <Icon name="check" className="size-3" />
         </span>
       )}

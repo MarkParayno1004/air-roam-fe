@@ -19,7 +19,7 @@ export default function Account() {
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 md:grid-cols-[240px_1fr] md:px-10">
         <nav aria-label="Account" className="flex h-fit gap-1 overflow-x-auto rounded-card border border-border bg-surface p-3 md:flex-col">
           {NAV.map(([to, label]) => (
-            <NavLink key={to} to={to} className={({ isActive }) => cn("shrink-0 rounded-button px-4 py-3 text-sm font-medium", isActive ? "bg-primary-soft font-semibold text-primary" : "hover:bg-background")}>
+            <NavLink key={to} to={to} className={({ isActive }) => cn("shrink-0 rounded-button px-4 py-3 text-sm font-medium", isActive ? "bg-accent-soft font-semibold text-ink" : "hover:bg-background")}>
               {label}
             </NavLink>
           ))}

@@ -29,7 +29,7 @@ npm run dev -w apps/admin     # http://localhost:5174
 npm test                      # Vitest unit/component tests (all workspaces)
 npm run typecheck
 npx playwright test           # end-to-end: store + live backend (POST /orders mocked; no Xendit key needed)
-npm run build                 # store: pre-renders every destination (backend must be running) + sitemap/robots; admin: static bundle
+npm run build                 # store: pre-renders the store pages (backend must be running) + sitemap/robots; admin: static bundle
 ```
 
 The backend limits login/sign-up to 5 per minute per IP — wait a minute between repeated e2e runs.
@@ -41,4 +41,3 @@ The backend limits login/sign-up to 5 per minute per IP — wait a minute betwee
 ## Hosting (later)
 
 Both apps build to static files (Cloudflare Pages planned). Store pre-render needs the API reachable at build time; catalog saves trigger a rebuild via the backend's `WEB_REBUILD_HOOK_URL`.
-# air-roam-fe

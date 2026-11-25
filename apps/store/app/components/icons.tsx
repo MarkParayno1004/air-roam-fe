@@ -10,6 +10,9 @@ const PATHS = {
   check: "M5 12l5 5 9-10",
   down: "M6 9l6 6 6-6",
   right: "M9 6l6 6-6 6",
+  cart: "M3 4h2l2.4 11h10.2L20 7H5.7M9 20h.01M17 20h.01",
+  menu: "M4 7h16M4 12h16M4 17h16",
+  close: "M6 6l12 12M18 6L6 18",
 };
 
 export type IconName = keyof typeof PATHS;

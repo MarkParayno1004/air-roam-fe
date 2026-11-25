@@ -30,7 +30,7 @@ function regionsOf(destinations: Destination[]) {
     region.countries.push(d);
     byId.set(region.id, region);
   }
-  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "en")); // fixed locale: see offers.ts
 }
 
 export default function MultiCountry() {

@@ -15,10 +15,3 @@ export async function fetchProductsPage() {
   const [destinations, products] = await Promise.all([fetchDestinations(), fetchProducts()]);
   return { destinations, products };
 }
-
-export async function fetchDestinationPage(slug: string) {
-  const [destinations, products] = await Promise.all([fetchDestinations(), fetchProducts()]);
-  const destination = destinations.find((d) => d.slug === slug);
-  if (!destination) throw new Response("Destination not found", { status: 404 });
-  return { destination, products };
-}

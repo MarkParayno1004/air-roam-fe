@@ -1,6 +1,6 @@
 import { Card, cn } from "@air-roam/ui";
 import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router";
+import { Link, matchPath, useLocation } from "react-router";
 import { Icon, type IconName } from "../components/icons";
 
 const TABS = [
@@ -15,6 +15,7 @@ export function ProductTabs({ intro, field, other, children }: {
   other: { to: string; icon: IconName; title: string; text: string };
   children: ReactNode;
 }) {
+  const { pathname } = useLocation();
   return (
     <>
       <section className="bg-primary-soft">
@@ -25,21 +26,23 @@ export function ProductTabs({ intro, field, other, children }: {
               <p className="mt-3 text-muted md:text-lg">{intro}</p>
             </div>
             <nav aria-label="Trip type" className="flex rounded-full bg-primary/10 p-1 sm:w-fit">
-              {TABS.map(([to, label]) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end
-                  className={({ isActive }) =>
-                    cn(
-                      "flex min-h-11 flex-1 items-center justify-center rounded-full px-5 text-sm whitespace-nowrap transition-colors duration-150 motion-reduce:transition-none",
-                      isActive ? "bg-surface font-semibold text-primary shadow-sm" : "font-medium text-ink hover:text-primary",
-                    )
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
+              {TABS.map(([to, label]) => {
+                const active = matchPath(to, pathname); // not NavLink: see Header
+                return (
+                  <Link
+                    key={to}
+                    to={to}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex min-h-11 flex-auto items-center justify-center gap-1.5 rounded-full px-2.5 text-sm whitespace-nowrap transition-colors duration-150 motion-reduce:transition-none sm:px-5",
+                      active ? "bg-accent font-semibold text-on-accent shadow-sm" : "font-medium text-ink hover:text-primary",
+                    )}
+                  >
+                    {active && <Icon name="check" className="size-4" />}
+                    {label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           <div className="max-w-2xl">{field}</div>

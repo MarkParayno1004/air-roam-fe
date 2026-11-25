@@ -54,7 +54,7 @@ export function CountriesList() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-bold">Countries</h1>
-        <p className="mt-1 text-sm text-muted">Tick the countries to show under Popular destinations on the store's home page.</p>
+        <p className="mt-1 text-sm text-muted">Tick the countries to show under “Where are you headed?” on the store's home page.</p>
       </div>
       <Card className="grid gap-3 p-4 sm:grid-cols-3">
         <FilterInput label="Search" value={f.get("search")} onChange={(v) => f.set("search", v)} placeholder="Country" />

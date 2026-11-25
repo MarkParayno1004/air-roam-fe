@@ -26,13 +26,16 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   },
 };
 
+const withoutSlash = (pathname: string) => pathname.replace(/\/$/, ""); // some static hosts add it
+const pageAt = (pathname: string) => PAGES[withoutSlash(pathname)] ?? PAGES["/contact"];
+
 export const meta = ({ location }: { location: { pathname: string } }) => {
-  const page = PAGES[location.pathname] ?? PAGES["/contact"];
-  return buildMeta({ title: `${page.title} · Air Roam`, description: page.body[0].slice(0, 155), path: location.pathname });
+  const page = pageAt(location.pathname);
+  return buildMeta({ title: `${page.title} · Air Roam`, description: page.body[0].slice(0, 155), path: withoutSlash(location.pathname) });
 };
 
 export default function Legal() {
-  const page = PAGES[useLocation().pathname] ?? PAGES["/contact"];
+  const page = pageAt(useLocation().pathname);
   return (
     <article className="mx-auto max-w-3xl px-5 py-12 md:px-10">
       <h1 className="text-3xl font-bold">{page.title}</h1>
