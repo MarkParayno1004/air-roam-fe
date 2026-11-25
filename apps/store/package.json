@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "react-router dev --port 5173",
+    "dev": "react-router dev --port 5175",
     "build": "react-router build && node scripts/write-seo-files.ts",
     "typegen": "react-router typegen"
   },
