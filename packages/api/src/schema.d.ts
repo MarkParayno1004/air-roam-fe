@@ -161,6 +161,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Pocket WiFi bookings are made at checkout; only staff can change them afterwards. */
         get: operations["v1_bookings_list"];
         put?: never;
         post?: never;
@@ -177,13 +178,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description Pocket WiFi bookings are made at checkout; only staff can change them afterwards. */
         get: operations["v1_bookings_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["v1_bookings_partial_update"];
+        patch?: never;
         trace?: never;
     };
     "/api/v1/destinations": {
@@ -216,38 +218,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["v1_me_partial_update"];
-        trace?: never;
-    };
-    "/api/v1/multi-country-packs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["v1_multi_country_packs_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/order-lines/{line_id}/booking": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["v1_order_lines_booking_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/orders": {
@@ -411,6 +381,24 @@ export interface paths {
         patch: operations["v1_staff_bookings_partial_update"];
         trace?: never;
     };
+    "/api/v1/staff/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Countries on sale (those in an active region) and whether the store shows them as popular. */
+        get: operations["v1_staff_countries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Only the countries sent change, so ones hidden by an inactive region keep their flag. */
+        patch: operations["v1_staff_countries_partial_update"];
+        trace?: never;
+    };
     "/api/v1/staff/orders": {
         parameters: {
             query?: never;
@@ -491,36 +479,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/staff/products/{product_pk}/variants": {
+    "/api/v1/staff/regions": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_staff_products_variants_list"];
+        get: operations["v1_staff_regions_list"];
         put?: never;
-        post: operations["v1_staff_products_variants_create"];
+        post: operations["v1_staff_regions_create"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/staff/products/{product_pk}/variants/{id}": {
+    "/api/v1/staff/regions/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["v1_staff_products_variants_retrieve"];
-        put: operations["v1_staff_products_variants_update"];
+        get: operations["v1_staff_regions_retrieve"];
+        put: operations["v1_staff_regions_update"];
         post?: never;
-        delete: operations["v1_staff_products_variants_destroy"];
+        delete: operations["v1_staff_regions_destroy"];
         options?: never;
         head?: never;
-        patch: operations["v1_staff_products_variants_partial_update"];
+        patch: operations["v1_staff_regions_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/staff/regions/{region_pk}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_staff_regions_plans_list"];
+        put?: never;
+        post: operations["v1_staff_regions_plans_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/regions/{region_pk}/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["v1_staff_regions_plans_retrieve"];
+        put: operations["v1_staff_regions_plans_update"];
+        post?: never;
+        delete: operations["v1_staff_regions_plans_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["v1_staff_regions_plans_partial_update"];
         trace?: never;
     };
     "/api/v1/staff/users": {
@@ -593,17 +613,11 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;
             readonly countries: string[];
-        };
-        BookingInput: {
-            /** Format: date-time */
-            start_at: string;
-            /** Format: date-time */
-            end_at: string;
-            destination_country_codes?: string[];
         };
         /**
          * @description * `pending` - Pending
@@ -621,7 +635,10 @@ export interface components {
         };
         CheckoutLine: {
             /** Format: uuid */
-            variant_id: string;
+            product_id: string;
+            country_code?: string;
+            /** Format: uuid */
+            region_plan_id?: string | null;
             quantity: number;
             /** Format: decimal */
             expected_unit_price: string;
@@ -629,7 +646,6 @@ export interface components {
             start_at?: string;
             /** Format: date-time */
             end_at?: string;
-            destination_country_codes?: string[];
         };
         CheckoutResponse: {
             order: components["schemas"]["Order"];
@@ -647,14 +663,22 @@ export interface components {
         CsrfToken: {
             csrfToken: string;
         };
+        /** @description A country, its price region and what it costs there. */
         Destination: {
+            region: components["schemas"]["DestinationRegion"];
             country_code: string;
             country_name: string;
             slug: string;
-            region: string;
             /** Format: decimal */
             from_price: string;
-            multi_country_pack_count: number;
+            plans: components["schemas"]["Plan"][];
+            wifi_plans: components["schemas"]["WifiPlan"][];
+            is_popular: boolean;
+        };
+        DestinationRegion: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
         LoginInput: {
             /** Format: email */
@@ -668,9 +692,11 @@ export interface components {
             readonly client: components["schemas"]["ClientEnum"];
             readonly currency: string;
             /** Format: decimal */
+            readonly delivery_fee: string;
+            /** Format: decimal */
             readonly total_amount: string;
             /** Format: uri */
-            readonly xendit_invoice_url: string | null;
+            readonly payment_url: string | null;
             /** Format: date-time */
             readonly paid_at: string | null;
             /** Format: date-time */
@@ -690,7 +716,9 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             /** Format: uuid */
-            readonly product_variant: string;
+            readonly product: string;
+            /** Format: uuid */
+            readonly region_plan: string | null;
             readonly product_name_snapshot: string;
             readonly variant_name_snapshot: string;
             readonly product_type_snapshot: string;
@@ -714,31 +742,6 @@ export interface components {
          * @enum {string}
          */
         OrderStatusEnum: "pending_payment" | "paid" | "fulfilled" | "cancelled" | "expired" | "refunded";
-        Pack: {
-            /** Format: uuid */
-            readonly id: string;
-            name: string;
-            readonly countries: components["schemas"]["PackCountry"][];
-            readonly scope: string;
-            region: components["schemas"]["RegionEnum"];
-            tag?: string | null;
-            is_featured?: boolean;
-            data_mb?: number | null;
-            validity_days?: number | null;
-            /** Format: decimal */
-            price: string;
-            pricing_unit?: components["schemas"]["PricingUnitEnum"];
-            product_type: string;
-            product_name: string;
-        };
-        PackCountry: {
-            code: string;
-            name: string;
-        };
-        PackGroup: {
-            region: string;
-            packs: components["schemas"]["Pack"][];
-        };
         PaginatedBookingDetailList: {
             /** @example 123 */
             count: number;
@@ -814,6 +817,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["StaffOrder"][];
         };
+        PaginatedStaffPlanList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StaffPlan"][];
+        };
         PaginatedStaffProductList: {
             /** @example 123 */
             count: number;
@@ -828,6 +846,21 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["StaffProduct"][];
+        };
+        PaginatedStaffRegionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["StaffRegion"][];
         };
         PaginatedStaffUserList: {
             /** @example 123 */
@@ -844,27 +877,8 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["StaffUser"][];
         };
-        PaginatedStaffVariantList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["StaffVariant"][];
-        };
-        PatchedBookingInput: {
-            /** Format: date-time */
-            start_at?: string;
-            /** Format: date-time */
-            end_at?: string;
-            destination_country_codes?: string[];
+        PatchedPopularChanges: {
+            countries?: components["schemas"]["PopularChange"][];
         };
         PatchedStaffBookingInput: {
             /** Format: date-time */
@@ -873,6 +887,22 @@ export interface components {
             end_at?: string;
             booking_status?: components["schemas"]["BookingStatusEnum"];
             destination_country_codes?: string[];
+        };
+        PatchedStaffPlan: {
+            /** Format: uuid */
+            readonly id?: string;
+            readonly label?: string;
+            for_wifi?: boolean;
+            name?: string;
+            data_mb?: number | null;
+            validity_days?: number | null;
+            /** Format: decimal */
+            price?: string;
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at?: string;
+            /** Format: date-time */
+            readonly updated_at?: string;
         };
         PatchedStaffProduct: {
             /** Format: uuid */
@@ -887,7 +917,18 @@ export interface components {
             readonly created_at?: string;
             /** Format: date-time */
             readonly updated_at?: string;
-            readonly variants?: components["schemas"]["StaffVariant"][];
+        };
+        PatchedStaffRegion: {
+            /** Format: uuid */
+            readonly id?: string;
+            name?: string;
+            countries?: string[];
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at?: string;
+            /** Format: date-time */
+            readonly updated_at?: string;
+            readonly plans?: components["schemas"]["StaffPlan"][];
         };
         PatchedStaffUser: {
             /** Format: uuid */
@@ -908,26 +949,6 @@ export interface components {
             password?: string;
             /** Format: date-time */
             readonly created_at?: string;
-        };
-        PatchedStaffVariant: {
-            /** Format: uuid */
-            readonly id?: string;
-            name?: string;
-            countries?: string[];
-            readonly scope?: string;
-            region?: components["schemas"]["RegionEnum"];
-            tag?: string | null;
-            is_featured?: boolean;
-            data_mb?: number | null;
-            validity_days?: number | null;
-            /** Format: decimal */
-            price?: string;
-            pricing_unit?: components["schemas"]["PricingUnitEnum"];
-            is_active?: boolean;
-            /** Format: date-time */
-            readonly created_at?: string;
-            /** Format: date-time */
-            readonly updated_at?: string;
         };
         PatchedStatusInput: {
             order_status?: components["schemas"]["OrderStatusEnum"];
@@ -955,21 +976,26 @@ export interface components {
          * @enum {string}
          */
         PermissionsEnum: "admin" | "marketing";
-        PriceUpdate: {
+        Plan: {
             /** Format: uuid */
-            variant_id: string;
+            readonly id: string;
+            readonly label: string;
+            data_mb?: number | null;
+            validity_days: number;
+            /** Format: decimal */
+            price: string;
+        };
+        PopularChange: {
+            code: string;
+            is_popular: boolean;
+        };
+        PriceUpdate: {
             name: string;
             /** Format: decimal */
             old_unit_price: string;
             /** Format: decimal */
             new_unit_price: string;
         };
-        /**
-         * @description * `per_plan` - Per plan
-         *     * `per_day` - Per day
-         * @enum {string}
-         */
-        PricingUnitEnum: "per_plan" | "per_day";
         Product: {
             /** Format: uuid */
             readonly id: string;
@@ -978,7 +1004,6 @@ export interface components {
             /** Format: uri */
             product_thumbnail_img?: string | null;
             product_description?: string;
-            variants: components["schemas"]["Variant"][];
         };
         /**
          * @description * `sim` - SIM
@@ -990,19 +1015,6 @@ export interface components {
         RefreshInput: {
             refresh: string;
         };
-        /**
-         * @description * `asia` - Asia
-         *     * `europe` - Europe
-         *     * `north_america` - North America
-         *     * `south_america` - South America
-         *     * `africa` - Africa
-         *     * `oceania` - Oceania
-         *     * `middle_east` - Middle East
-         *     * `local_ph` - Local PH
-         *     * `global` - Global
-         * @enum {string}
-         */
-        RegionEnum: "asia" | "europe" | "north_america" | "south_america" | "africa" | "oceania" | "middle_east" | "local_ph" | "global";
         Register: {
             first_name: string;
             last_name: string;
@@ -1013,8 +1025,6 @@ export interface components {
             password: string;
         };
         RemovedLine: {
-            /** Format: uuid */
-            variant_id: string;
             name: string;
         };
         Session: {
@@ -1038,6 +1048,7 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;
@@ -1063,6 +1074,7 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;
@@ -1072,6 +1084,12 @@ export interface components {
             readonly rental_days: number;
             rental_days_changed: boolean;
         };
+        StaffCountry: {
+            code: string;
+            name: string;
+            region: string;
+            is_popular: boolean;
+        };
         StaffOrder: {
             /** Format: uuid */
             readonly id: string;
@@ -1079,9 +1097,11 @@ export interface components {
             readonly client: components["schemas"]["ClientEnum"];
             readonly currency: string;
             /** Format: decimal */
+            readonly delivery_fee: string;
+            /** Format: decimal */
             readonly total_amount: string;
             /** Format: uri */
-            readonly xendit_invoice_url: string | null;
+            readonly payment_url: string | null;
             /** Format: date-time */
             readonly paid_at: string | null;
             /** Format: date-time */
@@ -1090,9 +1110,25 @@ export interface components {
             readonly updated_at: string;
             readonly lines: components["schemas"]["OrderLine"][];
             readonly user: components["schemas"]["OrderCustomer"];
-            xendit_invoice_id?: string | null;
+            payment_session_id?: string | null;
             needs_attention?: boolean;
             attention_note?: string;
+        };
+        StaffPlan: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly label: string;
+            for_wifi?: boolean;
+            name?: string;
+            data_mb?: number | null;
+            validity_days?: number | null;
+            /** Format: decimal */
+            price: string;
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
         };
         StaffProduct: {
             /** Format: uuid */
@@ -1107,7 +1143,18 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
-            readonly variants: components["schemas"]["StaffVariant"][];
+        };
+        StaffRegion: {
+            /** Format: uuid */
+            readonly id: string;
+            name: string;
+            countries: string[];
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+            readonly plans: components["schemas"]["StaffPlan"][];
         };
         StaffUser: {
             /** Format: uuid */
@@ -1128,26 +1175,6 @@ export interface components {
             password?: string;
             /** Format: date-time */
             readonly created_at: string;
-        };
-        StaffVariant: {
-            /** Format: uuid */
-            readonly id: string;
-            name: string;
-            countries: string[];
-            readonly scope: string;
-            region: components["schemas"]["RegionEnum"];
-            tag?: string | null;
-            is_featured?: boolean;
-            data_mb?: number | null;
-            validity_days?: number | null;
-            /** Format: decimal */
-            price: string;
-            pricing_unit?: components["schemas"]["PricingUnitEnum"];
-            is_active?: boolean;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
         };
         TokenPair: {
             access: string;
@@ -1170,20 +1197,14 @@ export interface components {
             readonly effective_address: string;
             readonly permissions: components["schemas"]["PermissionsEnum"][];
         };
-        Variant: {
+        WifiPlan: {
             /** Format: uuid */
             readonly id: string;
-            name: string;
-            countries: string[];
-            readonly scope: string;
-            region: components["schemas"]["RegionEnum"];
-            tag?: string | null;
-            is_featured?: boolean;
-            data_mb?: number | null;
-            validity_days?: number | null;
+            readonly name: string;
+            readonly label: string;
+            readonly data_mb: number | null;
             /** Format: decimal */
-            price: string;
-            pricing_unit?: components["schemas"]["PricingUnitEnum"];
+            readonly price: string;
         };
     };
     responses: never;
@@ -1452,33 +1473,6 @@ export interface operations {
             };
         };
     };
-    v1_bookings_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedBookingInput"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedBookingInput"];
-                "multipart/form-data": components["schemas"]["PatchedBookingInput"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BookingDetail"];
-                };
-            };
-        };
-    };
     v1_destinations_list: {
         parameters: {
             query?: never;
@@ -1579,52 +1573,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    v1_multi_country_packs_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PackGroup"][];
-                };
-            };
-        };
-    };
-    v1_order_lines_booking_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                line_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BookingInput"];
-                "application/x-www-form-urlencoded": components["schemas"]["BookingInput"];
-                "multipart/form-data": components["schemas"]["BookingInput"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BookingDetail"];
-                };
             };
         };
     };
@@ -1900,6 +1848,50 @@ export interface operations {
             };
         };
     };
+    v1_staff_countries_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCountry"][];
+                };
+            };
+        };
+    };
+    v1_staff_countries_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPopularChanges"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPopularChanges"];
+                "multipart/form-data": components["schemas"]["PatchedPopularChanges"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCountry"][];
+                };
+            };
+        };
+    };
     v1_staff_orders_list: {
         parameters: {
             query?: {
@@ -2166,7 +2158,7 @@ export interface operations {
             };
         };
     };
-    v1_staff_products_variants_list: {
+    v1_staff_regions_list: {
         parameters: {
             query?: {
                 /** @description A page number within the paginated result set. */
@@ -2175,9 +2167,7 @@ export interface operations {
                 page_size?: number;
             };
             header?: never;
-            path: {
-                product_pk: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -2187,25 +2177,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedStaffVariantList"];
+                    "application/json": components["schemas"]["PaginatedStaffRegionList"];
                 };
             };
         };
     };
-    v1_staff_products_variants_create: {
+    v1_staff_regions_create: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                product_pk: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StaffVariant"];
-                "application/x-www-form-urlencoded": components["schemas"]["StaffVariant"];
-                "multipart/form-data": components["schemas"]["StaffVariant"];
+                "application/json": components["schemas"]["StaffRegion"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffRegion"];
+                "multipart/form-data": components["schemas"]["StaffRegion"];
             };
         };
         responses: {
@@ -2214,18 +2202,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StaffVariant"];
+                    "application/json": components["schemas"]["StaffRegion"];
                 };
             };
         };
     };
-    v1_staff_products_variants_retrieve: {
+    v1_staff_regions_retrieve: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                /** @description A UUID string identifying this region. */
                 id: string;
-                product_pk: string;
             };
             cookie?: never;
         };
@@ -2236,26 +2224,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StaffVariant"];
+                    "application/json": components["schemas"]["StaffRegion"];
                 };
             };
         };
     };
-    v1_staff_products_variants_update: {
+    v1_staff_regions_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                /** @description A UUID string identifying this region. */
                 id: string;
-                product_pk: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StaffVariant"];
-                "application/x-www-form-urlencoded": components["schemas"]["StaffVariant"];
-                "multipart/form-data": components["schemas"]["StaffVariant"];
+                "application/json": components["schemas"]["StaffRegion"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffRegion"];
+                "multipart/form-data": components["schemas"]["StaffRegion"];
             };
         };
         responses: {
@@ -2264,18 +2252,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StaffVariant"];
+                    "application/json": components["schemas"]["StaffRegion"];
                 };
             };
         };
     };
-    v1_staff_products_variants_destroy: {
+    v1_staff_regions_destroy: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                /** @description A UUID string identifying this region. */
                 id: string;
-                product_pk: string;
             };
             cookie?: never;
         };
@@ -2290,21 +2278,21 @@ export interface operations {
             };
         };
     };
-    v1_staff_products_variants_partial_update: {
+    v1_staff_regions_partial_update: {
         parameters: {
             query?: never;
             header?: never;
             path: {
+                /** @description A UUID string identifying this region. */
                 id: string;
-                product_pk: string;
             };
             cookie?: never;
         };
         requestBody?: {
             content: {
-                "application/json": components["schemas"]["PatchedStaffVariant"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedStaffVariant"];
-                "multipart/form-data": components["schemas"]["PatchedStaffVariant"];
+                "application/json": components["schemas"]["PatchedStaffRegion"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedStaffRegion"];
+                "multipart/form-data": components["schemas"]["PatchedStaffRegion"];
             };
         };
         responses: {
@@ -2313,7 +2301,159 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["StaffVariant"];
+                    "application/json": components["schemas"]["StaffRegion"];
+                };
+            };
+        };
+    };
+    v1_staff_regions_plans_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStaffPlanList"];
+                };
+            };
+        };
+    };
+    v1_staff_regions_plans_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffPlan"];
+                "multipart/form-data": components["schemas"]["StaffPlan"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlan"];
+                };
+            };
+        };
+    };
+    v1_staff_regions_plans_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlan"];
+                };
+            };
+        };
+    };
+    v1_staff_regions_plans_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffPlan"];
+                "multipart/form-data": components["schemas"]["StaffPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlan"];
+                };
+            };
+        };
+    };
+    v1_staff_regions_plans_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    v1_staff_regions_plans_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                region_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedStaffPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedStaffPlan"];
+                "multipart/form-data": components["schemas"]["PatchedStaffPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPlan"];
                 };
             };
         };

@@ -1,5 +1,5 @@
 import type { BookingDetail, Page } from "@air-roam/api";
-import { Card, StatusBadge, TYPE_LABEL, formatDate } from "@air-roam/ui";
+import { Card, StatusBadge, formatDate } from "@air-roam/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { useAuth } from "../auth/AuthProvider";
@@ -12,13 +12,13 @@ export default function MyBookings() {
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl font-bold">My bookings</h1>
       {isLoading && <p className="text-muted">Loading…</p>}
-      {data?.results.length === 0 && <p className="text-muted">No bookings yet. Choose travel dates from <Link to="/account/orders" className="text-primary">My orders</Link>.</p>}
+      {data?.results.length === 0 && <p className="text-muted">No bookings yet. Pocket WiFi rentals appear here.</p>}
       {data?.results.map((b) => (
         <Card key={b.id} className="flex flex-wrap items-center justify-between gap-3 p-5">
           <div className="flex flex-col gap-1">
-            <p className="font-semibold">{TYPE_LABEL[b.product_type] ?? b.product_type} · {b.variant_name}</p>
+            <p className="font-semibold">{b.product_name} · {b.variant_name}</p>
             <p className="text-xs text-muted">{formatDate(b.start_at)} – {formatDate(b.end_at)} · {b.destination_country_codes.join(", ")}</p>
-            {b.pricing_unit === "per_day" && <LockNote>Rental dates can't be changed online. Contact support for changes.</LockNote>}
+            <LockNote>Rental dates can't be changed online. Contact support for changes.</LockNote>
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge status={b.booking_status} />

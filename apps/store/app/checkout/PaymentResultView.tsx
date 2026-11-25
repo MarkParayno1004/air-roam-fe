@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../auth/AuthProvider";
 
-/** The Xendit redirect is not proof of payment: poll the order until the webhook has updated it. */
+/** The PayMongo redirect is not proof of payment (and the customer may return unpaid): poll until the webhook has updated the order. */
 export function PaymentResultView({ orderId, intervalMs = 2000, maxWaitMs = 30_000 }: { orderId: string; intervalMs?: number; maxWaitMs?: number }) {
   const { client } = useAuth();
   const [timedOut, setTimedOut] = useState(false);
@@ -29,14 +29,15 @@ export function PaymentResultView({ orderId, intervalMs = 2000, maxWaitMs = 30_0
           {timedOut ? (
             <>
               <h1 className="text-xl font-semibold">Still processing</h1>
-              <p className="text-sm text-muted">Your payment is taking longer than usual. We'll update your order as soon as Xendit confirms it.</p>
+              <p className="text-sm text-muted">Your payment is taking longer than usual, or may not have been completed. We'll update your order as soon as PayMongo confirms it.</p>
+              {order?.payment_url && <a href={order.payment_url} className="inline-flex h-10 items-center rounded-button bg-primary px-5 text-sm font-semibold text-on-primary">Pay now</a>}
               <Link to="/account/orders" className="font-semibold text-primary">Check My orders</Link>
             </>
           ) : (
             <>
               <span className="size-12 animate-spin rounded-full border-4 border-border border-t-primary" aria-hidden />
               <h1 className="text-xl font-semibold">Confirming your payment…</h1>
-              <p className="text-sm text-muted">This can take up to 30 seconds.</p>
+              <p className="text-sm text-muted">If you already paid, this can take up to 30 seconds.</p>
               <StatusBadge status="pending_payment" />
             </>
           )}
@@ -46,8 +47,8 @@ export function PaymentResultView({ orderId, intervalMs = 2000, maxWaitMs = 30_0
       {order && (status === "expired" || status === "cancelled") && (
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <h1 className="text-xl font-semibold">Payment not completed</h1>
-          <p className="text-sm text-muted">This order is {status}. Nothing was charged.</p>
-          <Link to="/destinations" className="font-semibold text-primary">Browse plans</Link>
+          <p className="text-sm text-muted">This order is {status}. If you were charged, contact us and we'll sort it out.</p>
+          <Link to="/products" className="font-semibold text-primary">Browse plans</Link>
         </Card>
       )}
     </div>
@@ -69,16 +70,12 @@ function Paid({ order }: { order: Order }) {
         {order.lines.map((l) => (
           <li key={l.id} className="flex items-center justify-between gap-3 rounded-input bg-background p-4">
             <div>
-              <p className="text-sm font-semibold">{l.variant_name_snapshot}</p>
+              <p className="text-sm font-semibold">{l.product_name_snapshot} · {l.variant_name_snapshot}</p>
               <p className="text-xs text-muted">
-                {l.booking ? `${formatDate(l.booking.start_at)} – ${formatDate(l.booking.end_at)} · ${l.booking.destination_country_codes.join(", ")}` : "Pick when you'll use it"}
+                {l.booking ? `${formatDate(l.booking.start_at)} – ${formatDate(l.booking.end_at)} · ${l.booking.destination_country_codes.join(", ")}` : "Starts when you activate"}
               </p>
             </div>
-            {l.booking ? (
-              <StatusBadge status={l.booking.booking_status} />
-            ) : (
-              <Link to={`/account/orders/${order.id}?line=${l.id}`} className="inline-flex h-9 shrink-0 items-center rounded-button bg-primary px-4 text-sm font-semibold text-on-primary">Choose travel dates</Link>
-            )}
+            {l.booking && <StatusBadge status={l.booking.booking_status} />}
           </li>
         ))}
       </ul>

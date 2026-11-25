@@ -1,19 +1,19 @@
 import { useLocation } from "react-router";
 import { buildMeta } from "../seo/meta";
 
-/** Placeholder legal/contact copy — replace with the reviewed text before Xendit merchant approval. */
+/** Placeholder legal/contact copy — replace with the reviewed text before PayMongo merchant approval. */
 const PAGES: Record<string, { title: string; body: string[] }> = {
   "/terms": {
     title: "Terms of service",
     body: [
-      "Air Roam sells roaming data plans (eSIM, SIM) and Pocket WiFi rentals to travelers. Prices are in Philippine pesos (PHP) and payments are processed by Xendit.",
-      "Pocket WiFi rental dates are final once ordered; contact support to change them. eSIM and SIM travel dates can be changed until the start date.",
+      "Air Roam sells roaming data plans (eSIM, SIM) and Pocket WiFi rentals to travelers. Prices are in Philippine pesos (PHP) and payments are processed by PayMongo (GCash, Maya, QR Ph or card).",
+      "Pocket WiFi rental dates are final once ordered; contact support to change them. eSIM and SIM plan days start when the plan is activated. Pocket WiFi orders of 7 days or fewer in total have a ₱200 delivery fee.",
     ],
   },
   "/privacy": {
     title: "Privacy policy",
     body: [
-      "We collect your name, email, contact number and address to create your account and fulfil your orders. Card and wallet details are entered on Xendit's page and never stored by Air Roam.",
+      "We collect your name, email, contact number and address to create your account and fulfil your orders. Card and wallet details are entered on PayMongo's page and never stored by Air Roam.",
     ],
   },
   "/refund-policy": {
@@ -26,13 +26,16 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   },
 };
 
+const withoutSlash = (pathname: string) => pathname.replace(/\/$/, ""); // some static hosts add it
+const pageAt = (pathname: string) => PAGES[withoutSlash(pathname)] ?? PAGES["/contact"];
+
 export const meta = ({ location }: { location: { pathname: string } }) => {
-  const page = PAGES[location.pathname] ?? PAGES["/contact"];
-  return buildMeta({ title: `${page.title} · Air Roam`, description: page.body[0].slice(0, 155), path: location.pathname });
+  const page = pageAt(location.pathname);
+  return buildMeta({ title: `${page.title} · Air Roam`, description: page.body[0].slice(0, 155), path: withoutSlash(location.pathname) });
 };
 
 export default function Legal() {
-  const page = PAGES[useLocation().pathname] ?? PAGES["/contact"];
+  const page = pageAt(useLocation().pathname);
   return (
     <article className="mx-auto max-w-3xl px-5 py-12 md:px-10">
       <h1 className="text-3xl font-bold">{page.title}</h1>

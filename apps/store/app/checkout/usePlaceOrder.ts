@@ -5,13 +5,11 @@ import { isRental, toApiDate } from "../cart/rental";
 import { useCart, type CartLine } from "../cart/store";
 
 export function toApiLine(l: CartLine) {
-  const line: Record<string, unknown> = { variant_id: l.variant.id, quantity: l.quantity, expected_unit_price: l.variant.price };
-  if (isRental(l)) {
-    line.start_at = toApiDate(l.start_date!);
-    line.end_at = toApiDate(l.end_date!);
-    line.destination_country_codes = l.destination_country_codes;
-  }
-  return line;
+  const line = {
+    product_id: l.product.id, ...(!l.region && { country_code: l.country_code }), region_plan_id: l.plan.id,
+    quantity: l.quantity, expected_unit_price: l.plan.price,
+  };
+  return isRental(l) ? { ...line, start_at: toApiDate(l.start_date!), end_at: toApiDate(l.end_date!) } : line;
 }
 
 /** POST /orders exactly once per click burst; clears the cart once the order exists. */

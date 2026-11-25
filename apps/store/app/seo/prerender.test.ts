@@ -3,12 +3,12 @@ import { STATIC_PATHS, prerenderPaths } from "./prerender";
 const ok = (data: unknown) => vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(data) });
 const down = () => vi.fn().mockRejectedValue(new TypeError("fetch failed"));
 
-test("adds a page per destination", async () => {
-  const paths = await prerenderPaths({ env: {}, fetchImpl: ok([{ slug: "japan" }]) });
-  expect(paths).toEqual([...STATIC_PATHS, "/destinations/japan"]);
+test("pre-renders the static pages only", async () => {
+  await expect(prerenderPaths({ env: {}, fetchImpl: ok([{ slug: "japan" }]) })).resolves.toEqual(STATIC_PATHS);
+  expect(STATIC_PATHS.some((p) => p.includes("destinations"))).toBe(false);
 });
 
-test("local builds fall back to static pages when the API is down", async () => {
+test("locally, an API that is down is not an error here", async () => {
   await expect(prerenderPaths({ env: {}, fetchImpl: down() })).resolves.toEqual(STATIC_PATHS);
 });
 

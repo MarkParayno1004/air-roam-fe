@@ -1,13 +1,12 @@
-import type { CatalogVariant } from "@air-roam/ui";
 import { useNavigate } from "react-router";
-import { useCart } from "../cart/store";
+import { useCart, type NewLine } from "../cart/store";
 
-/** Add a plan and open the cart (Pocket WiFi needs dates there anyway). */
-export function useAddToCart(): (v: CatalogVariant) => void {
+/** Add a product and open the cart. */
+export function useAddToCart(): (l: NewLine) => void {
   const { add } = useCart();
   const navigate = useNavigate();
-  return (v) => {
-    add(v);
+  return (l) => {
+    add(l);
     navigate("/cart");
   };
 }

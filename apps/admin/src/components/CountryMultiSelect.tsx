@@ -1,7 +1,7 @@
 import { allCountries, countryName } from "@air-roam/ui";
 import { useId, useState } from "react";
 
-/** Searchable multi-select: one country = single-country plan, two or more = multi-country pack. */
+/** Searchable country multi-select. */
 export function CountryMultiSelect({ value, onChange, error }: { value: string[]; onChange: (codes: string[]) => void; error?: string }) {
   const [q, setQ] = useState("");
   const id = useId();
@@ -15,7 +15,7 @@ export function CountryMultiSelect({ value, onChange, error }: { value: string[]
   };
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">Countries {value.length > 1 && <span className="text-muted">· multi-country pack ({value.length})</span>}</span>
+      <span className="text-sm font-medium">Countries {value.length > 1 && <span className="text-muted">({value.length})</span>}</span>
       <ul aria-label="Selected countries" className="flex flex-wrap gap-1.5">
         {value.map((c) => (
           <li key={c} className="flex items-center gap-1 rounded-full bg-primary-soft py-1 pr-1 pl-3 text-xs font-semibold text-primary">

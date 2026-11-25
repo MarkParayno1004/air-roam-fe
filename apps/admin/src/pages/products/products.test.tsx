@@ -3,30 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { CountryMultiSelect } from "../../components/CountryMultiSelect";
 import { ThumbnailUpload, validateThumbnail } from "./ThumbnailUpload";
-import { VariantForm, countriesLabel, toPayload } from "./VariantForm";
-import { VariantTable } from "./VariantTable";
-
-const ASIA8 = ["HK", "JP", "KR", "MY", "SG", "TH", "TW", "VN"];
-const variant = (over = {}) => ({
-  id: "v1", name: "Japan 10GB · 7 days", countries: ["JP"], scope: "single", region: "asia", tag: null, is_featured: false,
-  data_mb: 10240, validity_days: 7, price: "799.00", pricing_unit: "per_plan", is_active: true, created_at: "", updated_at: "", ...over,
-});
-
-test("countries column label", () => {
-  expect(countriesLabel(["JP"])).toBe("Japan");
-  expect(countriesLabel(ASIA8)).toBe("8 countries");
-});
-
-test("variant table shows the full country list on hover and asks before deleting", async () => {
-  const onDelete = vi.fn();
-  render(<VariantTable variants={[variant({ countries: ASIA8, name: "Asia 8" })] as never} productType="esim" onEdit={vi.fn()} onDelete={onDelete} />);
-  expect(screen.getByText("8 countries")).toHaveAttribute("title", expect.stringContaining("Japan"));
-  await userEvent.click(screen.getByRole("button", { name: "Delete Asia 8" }));
-  expect(onDelete).not.toHaveBeenCalled();
-  const dialog = screen.getByRole("alertdialog");
-  await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
-  expect(onDelete).toHaveBeenCalledWith("v1");
-});
+import { fakeClient, renderAdmin, staff } from "../../test-utils";
 
 function Picker() {
   const [value, setValue] = useState<string[]>(["JP"]);
@@ -57,17 +34,10 @@ test("thumbnail upload shows the error and does not upload", async () => {
   expect(onUpload).not.toHaveBeenCalled();
 });
 
-test("variant payload converts GB and keeps the countries array", () => {
-  expect(toPayload({ name: "Asia 2", countries: ["JP", "KR"], region: "asia", tag: "", is_featured: false, data_gb: "10", validity_days: "15", price: "1299", pricing_unit: "per_plan", is_active: true })).toEqual({
-    name: "Asia 2", countries: ["JP", "KR"], region: "asia", tag: null, is_featured: false, data_mb: 10240, validity_days: 15, price: "1299", pricing_unit: "per_plan", is_active: true,
-  });
-  expect(toPayload({ name: "WiFi", countries: ["JP"], region: "asia", tag: "Popular", is_featured: true, data_gb: "", validity_days: "", price: "350", pricing_unit: "per_day", is_active: true }).data_mb).toBeNull();
-});
-
-test("variant form saves and shows backend errors", async () => {
-  const onSave = vi.fn().mockRejectedValue({ fields: { countries: "Unknown country code(s): XX" } });
-  render(<VariantForm initial={variant() as never} productType="esim" onSave={onSave} onCancel={vi.fn()} />);
-  await userEvent.click(screen.getByRole("button", { name: "Save plan" }));
-  expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ countries: ["JP"], price: "799.00" }));
-  expect(await screen.findByText("Unknown country code(s): XX")).toBeInTheDocument();
+test("product editor has no plan form and links to regions", async () => {
+  const product = { id: "p1", product_name: "Air Roam eSIM", product_type: "esim", product_description: "", is_active: true };
+  renderAdmin("/products/p1", fakeClient(staff(["marketing"]), () => Promise.resolve(product)));
+  await screen.findByDisplayValue("Air Roam eSIM");
+  expect(screen.queryByRole("button", { name: "Add plan" })).not.toBeInTheDocument();
+  expect(within(screen.getByRole("main")).getByRole("link", { name: "Regions & prices" })).toHaveAttribute("href", "/regions");
 });

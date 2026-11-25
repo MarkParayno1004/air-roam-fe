@@ -1,21 +1,25 @@
-import type { PriceUpdate, RemovedLine } from "@air-roam/api";
-import type { CatalogVariant } from "@air-roam/ui";
+import type { Destination, Plan, WifiPlan } from "@air-roam/api";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { isRental } from "./rental";
 
 export const CART_KEY = "air-roam-cart"; // no secrets: plans, quantities and dates only
 
 export interface CartLine {
   id: string;
-  variant: CatalogVariant;
+  product: { id: string; product_name: string; product_type: string };
+  country_code: string; // "" when bought for a whole region
+  region?: Destination["region"]; // Multi-Country Explorer lines only
+  plan: Plan | WifiPlan; // WifiPlan (priced per day) for Pocket WiFi
   quantity: number;
   start_date?: string; // YYYY-MM-DD, Pocket WiFi only
   end_date?: string;
-  destination_country_codes?: string[];
 }
+
+export type NewLine = Omit<CartLine, "id" | "quantity">;
 
 function isLine(x: unknown): x is CartLine {
   const l = x as CartLine;
-  return !!l && typeof l.id === "string" && typeof l.quantity === "number" && !!l.variant && typeof l.variant.id === "string" && typeof l.variant.price === "string" && Array.isArray(l.variant.countries);
+  return typeof l?.plan?.price === "string" && typeof l.id === "string" && typeof l.quantity === "number" && typeof l.product?.id === "string" && typeof l.country_code === "string";
 }
 
 /** Read the saved cart; anything malformed resets to an empty cart. */
@@ -31,11 +35,10 @@ export function loadCart(): CartLine[] {
 interface CartApi {
   lines: CartLine[];
   count: number;
-  add: (v: CatalogVariant) => void;
+  add: (l: NewLine) => void;
   update: (id: string, patch: Partial<CartLine>) => void;
   remove: (id: string) => void;
   clear: () => void;
-  applyServerChanges: (updates: PriceUpdate[], removed: RemovedLine[]) => void;
 }
 
 const CartContext = createContext<CartApi | null>(null);
@@ -52,29 +55,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (loaded) localStorage.setItem(CART_KEY, JSON.stringify(lines));
   }, [lines, loaded]);
 
-  const add = useCallback((v: CatalogVariant) => {
+  const add = useCallback((n: NewLine) => {
     setLines((ls) => {
-      const existing = v.pricing_unit === "per_plan" && ls.find((l) => l.variant.id === v.id);
+      const existing = !isRental(n) && ls.find((l) => l.product.id === n.product.id && l.country_code === n.country_code && l.plan.id === n.plan.id);
       if (existing) return ls.map((l) => (l === existing ? { ...l, quantity: Math.min(10, l.quantity + 1) } : l));
-      const line: CartLine = { id: crypto.randomUUID(), variant: v, quantity: 1 };
-      if (v.pricing_unit === "per_day") line.destination_country_codes = [...v.countries];
-      return [...ls, line];
+      return [...ls, { ...n, id: crypto.randomUUID(), quantity: 1 }];
     });
   }, []);
   const update = useCallback((id: string, patch: Partial<CartLine>) => setLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l))), []);
   const remove = useCallback((id: string) => setLines((ls) => ls.filter((l) => l.id !== id)), []);
   const clear = useCallback(() => setLines([]), []);
-  const applyServerChanges = useCallback((updates: PriceUpdate[], removed: RemovedLine[]) => {
-    const gone = new Set(removed.map((r) => r.variant_id));
-    const prices = new Map(updates.map((u) => [u.variant_id, u.new_unit_price]));
-    setLines((ls) =>
-      ls.filter((l) => !gone.has(l.variant.id)).map((l) => (prices.has(l.variant.id) ? { ...l, variant: { ...l.variant, price: prices.get(l.variant.id)! } } : l)),
-    );
-  }, []);
 
   const value = useMemo(
-    () => ({ lines, count: lines.reduce((n, l) => n + l.quantity, 0), add, update, remove, clear, applyServerChanges }),
-    [lines, add, update, remove, clear, applyServerChanges],
+    () => ({ lines, count: lines.reduce((n, l) => n + l.quantity, 0), add, update, remove, clear }),
+    [lines, add, update, remove, clear],
   );
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
