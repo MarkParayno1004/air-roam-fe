@@ -28,8 +28,12 @@ export function RegionEditor() {
 
   useEffect(() => {
     if (region) setDraft({ name: region.name, countries: region.countries, pocket_wifi_daily_rate: region.pocket_wifi_daily_rate ?? "", is_active: region.is_active ?? true });
-  }, [region]);
+  }, [region?.id, region?.updated_at]); // not every refetch: adding a plan must not wipe unsaved edits
 
+  const edit = (patch: Partial<Draft>) => {
+    setSaved(false);
+    setDraft((d) => ({ ...d, ...patch }));
+  };
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ["staff-region", id] }), qc.invalidateQueries({ queryKey: ["staff-regions"] })]);
 
   async function saveRegion(e: React.FormEvent) {
@@ -83,11 +87,11 @@ export function RegionEditor() {
         <form onSubmit={saveRegion} className="flex flex-col gap-4" noValidate>
           <p className="text-sm text-muted">Customers never see the region name. They pick a country and get this region's prices.</p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Region name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} error={errors.name} placeholder="e.g. Asia 1" />
-            <Field label="Pocket WiFi rate per day (PHP)" inputMode="decimal" value={draft.pocket_wifi_daily_rate} onChange={(e) => setDraft({ ...draft, pocket_wifi_daily_rate: e.target.value })} hint="Empty = no Pocket WiFi in this region" error={errors.pocket_wifi_daily_rate} />
+            <Field label="Region name" value={draft.name} onChange={(e) => edit({ name: e.target.value })} error={errors.name} placeholder="e.g. Asia 1" />
+            <Field label="Pocket WiFi rate per day (PHP)" inputMode="decimal" value={draft.pocket_wifi_daily_rate} onChange={(e) => edit({ pocket_wifi_daily_rate: e.target.value })} hint="Empty = no Pocket WiFi in this region" error={errors.pocket_wifi_daily_rate} />
           </div>
-          <CountryMultiSelect value={draft.countries} onChange={(countries) => setDraft({ ...draft, countries })} error={errors.countries} />
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-primary" checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} /> Active (sold to travelers)</label>
+          <CountryMultiSelect value={draft.countries} onChange={(countries) => edit({ countries })} error={errors.countries} />
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="size-4 accent-primary" checked={draft.is_active} onChange={(e) => edit({ is_active: e.target.checked })} /> Active (sold to travelers)</label>
           {errors.form && <p role="alert" className="text-sm text-danger">{errors.form}</p>}
           {saved && <p role="status" className="text-sm text-success">Saved. The web store updates within a few minutes.</p>}
           <div className="flex gap-3">

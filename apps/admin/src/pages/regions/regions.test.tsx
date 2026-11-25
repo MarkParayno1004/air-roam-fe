@@ -68,3 +68,26 @@ test("a plan is deleted only after confirming", async () => {
   await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }));
   expect(write).toHaveBeenCalledWith("staff/regions/r1/plans/p1", { method: "DELETE" });
 });
+
+test("unsaved region edits survive a plan change", async () => {
+  // a fresh object per read, like the real API: plan writes don't bump the region's updated_at
+  const client = fakeClient(staff(["marketing"]), () => Promise.resolve(region));
+  renderAdmin("/regions/r1", client);
+  const rate = await screen.findByDisplayValue("100.00");
+  await userEvent.clear(rate);
+  await userEvent.type(rate, "150");
+  (client.request as ReturnType<typeof vi.fn>).mockImplementation((p: string, o?: Opts) => Promise.resolve(p === "me" ? staff(["marketing"]) : o?.method ? undefined : { ...region, plans: [] }));
+  await userEvent.click(screen.getByRole("button", { name: "Delete 5GB · 7 days" }));
+  await userEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" }));
+  expect(await screen.findByText("No plans yet. Add the first one.")).toBeInTheDocument();
+  expect(screen.getByLabelText(/Pocket WiFi rate/)).toHaveValue("150");
+});
+
+test("editing after a save clears the Saved message", async () => {
+  renderAdmin("/regions/r1", regionClient(() => Promise.resolve(region)));
+  await screen.findByDisplayValue("Asia 1");
+  await userEvent.click(screen.getByRole("button", { name: "Save region" }));
+  expect(await screen.findByRole("status")).toHaveTextContent("Saved.");
+  await userEvent.type(screen.getByLabelText("Region name"), "x");
+  expect(screen.queryByRole("status")).not.toBeInTheDocument();
+});

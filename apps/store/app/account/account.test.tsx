@@ -55,6 +55,7 @@ test("order card shows the delivery fee only when charged", () => {
 test("paid eSIM line starts on activation with no date links; unpaid order offers Pay now", () => {
   const { unmount } = wrap(client(), <OrderCard order={order([line()])} />);
   expect(screen.getByText("Starts when you activate")).toBeInTheDocument();
+  expect(screen.getByText("Air Roam eSIM · Japan 10GB · 7 days")).toBeInTheDocument();
   expect(screen.queryByRole("link")).not.toBeInTheDocument();
   unmount();
   wrap(client(), <OrderCard order={order([line()], { order_status: "pending_payment", xendit_invoice_url: "https://x/inv" })} />);

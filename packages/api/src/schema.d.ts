@@ -595,6 +595,7 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;
@@ -1016,6 +1017,7 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;
@@ -1041,6 +1043,7 @@ export interface components {
             readonly order_id: string;
             /** Format: uuid */
             readonly order_line_id: string;
+            readonly product_name: string;
             readonly variant_name: string;
             readonly product_type: string;
             readonly pricing_unit: string;

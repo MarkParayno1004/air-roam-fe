@@ -39,7 +39,7 @@ export function BookingEdit({ booking: b, onSaved, onClose }: { booking: StaffBo
   }
 
   return (
-    <form aria-label={`Edit booking ${b.variant_name}`} onSubmit={save} className="flex flex-col gap-4 rounded-input border border-border bg-background p-4" noValidate>
+    <form aria-label={`Edit booking ${b.product_name} · ${b.variant_name}`} onSubmit={save} className="flex flex-col gap-4 rounded-input border border-border bg-background p-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Start date" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
         <Field label="End date" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />

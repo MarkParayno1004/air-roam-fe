@@ -1,4 +1,4 @@
-import { TYPE_LABEL, countryName } from "@air-roam/ui";
+import { countryName } from "@air-roam/ui";
 import type { CartLine } from "./store";
 
 const DAY = 86_400_000;
@@ -15,9 +15,9 @@ export function todayISO(): string {
 
 export const isRental = (l: Pick<CartLine, "product">) => l.product.product_type === "pocket_wifi";
 
-/** Same wording as the order the server creates. */
+/** Product, country and plan: two products can share a country and plan, so the product name must show. */
 export function lineName(l: CartLine): string {
-  return `${countryName(l.country_code)} ${isRental(l) ? TYPE_LABEL.pocket_wifi : l.plan?.label ?? ""}`;
+  return `${l.product.product_name} · ${countryName(l.country_code)}${l.plan ? ` ${l.plan.label}` : ""}`;
 }
 
 export function lineProblem(l: Omit<CartLine, "id">, today: string): string | null {

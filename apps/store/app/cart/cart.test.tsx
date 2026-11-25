@@ -53,8 +53,8 @@ test("rental validation", () => {
 });
 
 test("line names", () => {
-  expect(lineName(esim())).toBe("Japan 5GB · 7 days");
-  expect(lineName(wifi("JP", 100, 2))).toBe("Japan Pocket WiFi");
+  expect(lineName(esim())).toBe("Air Roam eSIM · Japan 5GB · 7 days");
+  expect(lineName(wifi("JP", 100, 2))).toBe("Air Roam Pocket WiFi · Japan");
 });
 
 test("corrupt carts and carts saved before region pricing reset", () => {
@@ -107,7 +107,7 @@ test("summary shows the highest-rate note, delivery fee and total", () => {
   renderCart([wifi("JP", 100, 2), wifi("US", 50, 2)]);
   const summary = screen.getByRole("complementary");
   expect(summary).toHaveTextContent(HIGHEST);
-  expect(summary).toHaveTextContent("United States Pocket WiFi · ₱100 × 2 days₱200");
+  expect(summary).toHaveTextContent("Air Roam Pocket WiFi · United States · ₱100 × 2 days₱200");
   expect(summary).toHaveTextContent("Delivery fee₱200");
   expect(summary).toHaveTextContent("Total (PHP)₱600");
 });

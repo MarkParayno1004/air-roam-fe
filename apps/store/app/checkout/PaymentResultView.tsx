@@ -69,7 +69,7 @@ function Paid({ order }: { order: Order }) {
         {order.lines.map((l) => (
           <li key={l.id} className="flex items-center justify-between gap-3 rounded-input bg-background p-4">
             <div>
-              <p className="text-sm font-semibold">{l.variant_name_snapshot}</p>
+              <p className="text-sm font-semibold">{l.product_name_snapshot} · {l.variant_name_snapshot}</p>
               <p className="text-xs text-muted">
                 {l.booking ? `${formatDate(l.booking.start_at)} – ${formatDate(l.booking.end_at)} · ${l.booking.destination_country_codes.join(", ")}` : "Starts when you activate"}
               </p>

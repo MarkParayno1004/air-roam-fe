@@ -1,5 +1,5 @@
 import type { StaffOrder } from "@air-roam/api";
-import { Button, Card, Notice, StatusBadge, TYPE_LABEL, formatDate, formatPHP, statusLabel } from "@air-roam/ui";
+import { Button, Card, Notice, StatusBadge, formatDate, formatPHP, statusLabel } from "@air-roam/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -82,7 +82,7 @@ export function OrderDetail() {
           {o.lines.map((l) => (
             <div key={l.id} className="flex flex-wrap items-start justify-between gap-3 rounded-input bg-background p-4 text-sm">
               <div>
-                <p className="font-semibold">{TYPE_LABEL[l.product_type_snapshot] ?? l.product_type_snapshot} · {l.variant_name_snapshot}</p>
+                <p className="font-semibold">{l.product_name_snapshot} · {l.variant_name_snapshot}</p>
                 <p className="text-xs text-muted">
                   {l.quantity} × {formatPHP(l.unit_price)}{l.rental_days ? ` × ${l.rental_days} days` : ""} · {l.countries_snapshot.join(", ")}
                 </p>

@@ -54,7 +54,7 @@ function LineRow({ line: l }: { line: OrderLine }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 rounded-input bg-background p-4">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-semibold">{l.variant_name_snapshot}{l.rental_days ? ` · ${l.rental_days} days` : ""}</p>
+        <p className="text-sm font-semibold">{l.product_name_snapshot} · {l.variant_name_snapshot}{l.rental_days ? ` · ${l.rental_days} days` : ""}</p>
         {b ? (
           <>
             <p className="text-xs text-muted">{formatDate(b.start_at)} – {formatDate(b.end_at)} · {b.destination_country_codes.join(", ")}</p>

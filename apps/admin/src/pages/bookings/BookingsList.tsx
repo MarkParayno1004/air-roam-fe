@@ -1,5 +1,5 @@
 import type { Page, StaffBooking } from "@air-roam/api";
-import { Button, Card, StatusBadge, TYPE_LABEL, formatDate, statusLabel } from "@air-roam/ui";
+import { Button, Card, StatusBadge, formatDate, statusLabel } from "@air-roam/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { Link } from "react-router";
@@ -47,7 +47,7 @@ export function BookingsList() {
             {data?.results.map((b) => (
               <Fragment key={b.id}>
                 <tr className="border-b border-border last:border-0">
-                  <td className="p-3 font-medium">{TYPE_LABEL[b.product_type] ?? b.product_type} · {b.variant_name}</td>
+                  <td className="p-3 font-medium">{b.product_name} · {b.variant_name}</td>
                   <td className="p-3"><Link to={`/orders/${b.order_id}`} className="hover:text-primary">{b.customer_email}</Link></td>
                   <td className="p-3">{formatDate(b.start_at)} – {formatDate(b.end_at)}</td>
                   <td className="p-3">{b.destination_country_codes.join(", ")}</td>

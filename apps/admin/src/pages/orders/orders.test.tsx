@@ -9,12 +9,12 @@ const order = {
   xendit_invoice_url: "https://checkout.xendit.co/inv_1", xendit_invoice_id: "inv_1", paid_at: "2026-11-23T10:00:00+08:00",
   created_at: "2026-11-23T09:00:00+08:00", updated_at: "2026-11-23T10:00:00+08:00", needs_attention: false, attention_note: "",
   user: { id: "u1", email: "traveler@example.com", first_name: "Alex", last_name: "Santos", contact_no: "+63917" },
-  lines: [{ id: "l1", variant_name_snapshot: "Japan Pocket WiFi", product_type_snapshot: "pocket_wifi", pricing_unit_snapshot: "per_day", countries_snapshot: ["JP"], quantity: 1, unit_price: "350.00", rental_days: 6, line_total: "2100.00", booking: { id: "b1", booking_status: "confirmed", start_at: "2026-12-12T00:00:00+08:00", end_at: "2026-12-18T00:00:00+08:00", destination_country_codes: ["JP"] } }],
+  lines: [{ id: "l1", product_name_snapshot: "Air Roam Pocket WiFi", variant_name_snapshot: "Japan", product_type_snapshot: "pocket_wifi", pricing_unit_snapshot: "per_day", countries_snapshot: ["JP"], quantity: 1, unit_price: "350.00", rental_days: 6, line_total: "2100.00", booking: { id: "b1", booking_status: "confirmed", start_at: "2026-12-12T00:00:00+08:00", end_at: "2026-12-18T00:00:00+08:00", destination_country_codes: ["JP"] } }],
 };
 
 const wifiBooking = {
   id: "b1", booking_status: "confirmed", start_at: "2026-12-12T00:00:00+08:00", end_at: "2026-12-18T00:00:00+08:00", destination_country_codes: ["JP"],
-  order_id: order.id, order_line_id: "l1", variant_name: "Japan Pocket WiFi", product_type: "pocket_wifi", pricing_unit: "per_day", countries: ["JP"], customer_email: "traveler@example.com", rental_days: 6,
+  order_id: order.id, order_line_id: "l1", product_name: "Air Roam Pocket WiFi", variant_name: "Japan", product_type: "pocket_wifi", pricing_unit: "per_day", countries: ["JP"], customer_email: "traveler@example.com", rental_days: 6,
 };
 
 test.each([
@@ -71,7 +71,7 @@ test("server rental-days warning stays visible after saving", async () => {
   );
   renderAdmin("/bookings", client);
   await userEvent.click(await screen.findByRole("button", { name: "Edit booking for traveler@example.com" }));
-  const form = screen.getByRole("form", { name: "Edit booking Japan Pocket WiFi" });
+  const form = screen.getByRole("form", { name: "Edit booking Air Roam Pocket WiFi · Japan" });
   await userEvent.selectOptions(within(form).getByLabelText("Status"), "active"); // dates unchanged on screen
   await userEvent.click(screen.getByRole("button", { name: "Save booking" }));
   expect(await screen.findByText("The number of rental days changed — settle the price difference with the traveler manually.")).toBeInTheDocument();
