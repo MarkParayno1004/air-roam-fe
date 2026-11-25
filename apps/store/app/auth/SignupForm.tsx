@@ -11,7 +11,7 @@ const schema = z.object({
   first_name: z.string().trim().min(1, "Enter your first name."),
   last_name: z.string().trim().min(1, "Enter your last name."),
   email: z.string().email("Enter a valid email."),
-  contact_no: z.string().trim().max(30).optional(),
+  contact_no: z.string().trim().max(12, "Use at most 12 characters.").optional(),
   password: z.string().min(10, "Use at least 10 characters."),
 });
 type Values = z.infer<typeof schema>;
@@ -48,7 +48,7 @@ export function SignupForm() {
           <Field label="Last name" autoComplete="family-name" error={err("last_name")} {...register("last_name")} />
         </div>
         <Field label="Email" type="email" autoComplete="email" placeholder="you@example.com" error={err("email")} {...register("email")} />
-        <Field label="Contact no." type="tel" autoComplete="tel" placeholder="+63 9xx xxx xxxx" error={err("contact_no")} {...register("contact_no")} />
+        <Field label="Contact no." type="tel" autoComplete="tel" maxLength={12} placeholder="+09*********" error={err("contact_no")} {...register("contact_no")} />
         <Field label="Password" type="password" autoComplete="new-password" hint="At least 10 characters" error={err("password")} {...register("password")} />
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         <Button type="submit" size="lg" disabled={formState.isSubmitting}>{formState.isSubmitting ? "Creating account…" : "Create account"}</Button>

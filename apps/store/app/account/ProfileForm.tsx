@@ -48,7 +48,7 @@ export function ProfileForm() {
             <Field label="Last name" value={form.last_name} onChange={set("last_name")} autoComplete="family-name" />
           </div>
           <Field label="Email" value={user?.email ?? ""} disabled hint="Contact support to change your email." />
-          <Field label="Contact no." type="tel" value={form.contact_no} onChange={set("contact_no")} autoComplete="tel" />
+          <Field label="Contact no." type="tel" maxLength={12} placeholder="+09*********" value={form.contact_no} onChange={set("contact_no")} autoComplete="tel" />
           <Field label="Address" value={form.address} onChange={set("address")} autoComplete="street-address" hint="Used for physical SIM delivery. Pin-point location comes with the mobile app." />
           {saved && <p role="status" className="text-sm text-success">Saved.</p>}
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
