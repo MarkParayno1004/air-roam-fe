@@ -1,16 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useLoaderData, type ClientLoaderFunctionArgs } from "react-router";
-import { ProductCard } from "../catalog/ProductCard";
+import { CountryCombobox } from "../catalog/CountryCombobox";
+import { PlanPicker } from "../catalog/PlanPicker";
+import { ProductTabs } from "../catalog/ProductTabs";
 import { useAddToCart } from "../catalog/useAddToCart";
-import { fetchDestinations, fetchProducts } from "../lib/catalog";
+import { fetchProductsPage as load } from "../lib/catalog";
 import { liveOrPrerendered } from "../lib/loaders";
 import { buildMeta } from "../seo/meta";
 
-async function load() {
-  const [destinations, products] = await Promise.all([fetchDestinations(), fetchProducts()]);
-  return { destinations, products };
-}
-export const loader = load;
+export const loader = () => load();
 export const clientLoader = ({ serverLoader }: ClientLoaderFunctionArgs) => liveOrPrerendered(load, () => serverLoader<Awaited<ReturnType<typeof load>>>());
 
 export const meta = () =>
@@ -24,16 +23,15 @@ export default function Products() {
   const initial = useLoaderData<typeof load>();
   const { data } = useQuery({ queryKey: ["products"], queryFn: load, initialData: initial });
   const add = useAddToCart();
+  const [country, setCountry] = useState("");
+  const here = data.destinations.find((d) => d.country_code === country);
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 md:px-10">
-      <div>
-        <h1 className="text-3xl font-bold md:text-4xl">Products</h1>
-        <p className="mt-2 text-muted">Choose a product, then the country you're going to.</p>
-      </div>
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {data.products.map((p) => <ProductCard key={p.id} product={p} destinations={data.destinations} onAdd={add} />)}
-      </div>
-      {data.products.length === 0 && <p className="text-muted">No products available right now.</p>}
-    </div>
+    <ProductTabs
+      intro="Pick a country and see every way to stay connected there."
+      field={<CountryCombobox destinations={data.destinations} value={country} onChange={setCountry} />}
+      other={{ to: "/products/multi-country", icon: "globe", title: "Visiting more than one country?", text: "One eSIM or SIM can cover a whole region. Pocket WiFi is rented for one country." }}
+    >
+      {data.products.length > 0 ? <PlanPicker products={data.products} destination={here} onAdd={add} /> : <p className="text-muted">No products available right now.</p>}
+    </ProductTabs>
   );
 }

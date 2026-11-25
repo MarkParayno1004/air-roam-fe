@@ -16,9 +16,10 @@ test("guest adds a Japan eSIM, signs up at checkout and is sent to Xendit", asyn
 
   await page.goto("/destinations/japan");
   await expect(page.getByRole("heading", { name: "Japan", level: 1 })).toBeVisible();
-  const card = page.getByRole("article", { name: "Air Roam eSIM" });
-  await card.getByRole("radio", { name: "5GB · 7 days" }).check();
-  await card.getByRole("button", { name: "Add to cart" }).click();
+  const choose = (name: string) => page.locator("label", { has: page.getByRole("radio", { name, exact: true }) }).click(); // the radio is visually hidden in its card
+  await choose("Air Roam eSIM");
+  await choose("5GB · 7 days");
+  await page.getByRole("button", { name: "Add to cart" }).click();
 
   await expect(page).toHaveURL(/\/cart$/);
   await expect(page.getByRole("heading", { name: "Your cart" })).toBeVisible();

@@ -1,48 +1,36 @@
 import type { Destination, Product } from "@air-roam/api";
 import { Card, formatPHP } from "@air-roam/ui";
-import { useState } from "react";
 import { Link } from "react-router";
 import type { NewLine } from "../cart/store";
-import { Chips } from "./Chips";
-import { ProductCard } from "./ProductCard";
+import { PlanPicker } from "./PlanPicker";
 
-type Tab = "all" | "esim" | "sim" | "pocket_wifi";
-const TABS: Array<[Tab, string]> = [["all", "All products"], ["esim", "eSIM"], ["sim", "SIM"], ["pocket_wifi", "Pocket WiFi"]];
-
-export function DestinationView({ destination: d, destinations, products, onAdd }: {
+export function DestinationView({ destination: d, products, onAdd }: {
   destination: Destination;
-  destinations: Destination[];
   products: Product[];
   onAdd: (l: NewLine) => void;
 }) {
-  const [tab, setTab] = useState<Tab>("all");
-  const visible = products.filter((p) => tab === "all" || p.product_type === tab);
-
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-8 md:px-10">
-      <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
-        <Link to="/" className="hover:text-primary">Home</Link> / <Link to="/destinations" className="hover:text-primary">Destinations</Link> / {d.country_name}
-      </nav>
-      <header className="flex items-center gap-5">
-        <div className="flex size-20 shrink-0 items-center justify-center rounded-card bg-primary-soft text-3xl font-bold text-primary md:size-24">{d.country_code}</div>
-        <div>
-          <h1 className="text-3xl font-bold md:text-4xl">{d.country_name}</h1>
-          <p className="mt-1 text-muted">eSIM, SIM & Pocket WiFi rental · from {formatPHP(d.from_price)}</p>
+    <>
+      <header className="bg-primary-soft">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 md:px-10 md:py-12">
+          <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+            <Link to="/" className="hover:text-primary">Home</Link> / <Link to="/destinations" className="hover:text-primary">Destinations</Link> / {d.country_name}
+          </nav>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight md:text-5xl">{d.country_name}</h1>
+            <p className="mt-3 text-muted md:text-lg">eSIM, SIM & Pocket WiFi rental · from {formatPHP(d.from_price)}</p>
+          </div>
         </div>
       </header>
-      <Chips label="Product type" options={TABS} value={tab} onChange={setTab} />
-
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {visible.map((p) => <ProductCard key={`${d.country_code}-${p.id}`} product={p} destinations={destinations} initialCountry={d.country_code} onAdd={onAdd} />)}
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 py-10 md:px-10 md:py-12">
+        {products.length > 0 ? <PlanPicker products={products} destination={d} onAdd={onAdd} /> : <p className="text-muted">No products for {d.country_name} yet.</p>}
+        <Card className="p-6">
+          <h2 className="font-semibold">Good to know</h2>
+          <p className="mt-1 text-[13px] text-muted">
+            Pocket WiFi dates are final once ordered. eSIM and SIM days start when you activate.
+          </p>
+        </Card>
       </div>
-      {visible.length === 0 && <p className="text-muted">No {tab === "all" ? "products" : TABS.find(([k]) => k === tab)?.[1]} for {d.country_name} yet.</p>}
-
-      <Card className="p-6">
-        <h2 className="font-semibold">Good to know</h2>
-        <p className="mt-1 text-[13px] text-muted">
-          Pocket WiFi dates are final once ordered. eSIM and SIM days start when you activate.
-        </p>
-      </Card>
-    </div>
+    </>
   );
 }

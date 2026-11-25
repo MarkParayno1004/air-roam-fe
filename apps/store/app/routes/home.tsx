@@ -1,7 +1,7 @@
 import { Card } from "@air-roam/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link, useLoaderData, useNavigate, type ClientLoaderFunctionArgs } from "react-router";
+import { useLoaderData, useNavigate, type ClientLoaderFunctionArgs } from "react-router";
 import { liveOrPrerendered } from "../lib/loaders";
 import { PopularDestinations } from "../catalog/PopularDestinations";
 import { fetchDestinations } from "../lib/catalog";
@@ -81,13 +81,7 @@ export default function Home() {
       </section>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-5 py-14 md:px-10">
-        <section aria-labelledby="popular" className="flex flex-col gap-5">
-          <div className="flex items-end justify-between gap-4">
-            <h2 id="popular" className="text-2xl font-bold">Popular destinations</h2>
-            <Link to="/destinations" className="text-sm font-semibold text-primary">View all destinations</Link>
-          </div>
-          <PopularDestinations destinations={data.destinations} />
-        </section>
+        <PopularDestinations destinations={data.destinations} />
 
         <section aria-labelledby="how" className="flex flex-col gap-5">
           <h2 id="how" className="text-2xl font-bold">How it works</h2>

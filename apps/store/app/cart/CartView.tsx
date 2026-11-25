@@ -17,7 +17,7 @@ export function CartView({ signedIn, today }: { signedIn: boolean; today: string
       <div className="mx-auto max-w-xl px-5 py-24 text-center">
         <h1 className="text-3xl font-bold">Your cart is empty</h1>
         <p className="mt-3 text-muted">Find a plan for your next trip.</p>
-        <Link to="/destinations" className="mt-6 inline-flex h-11 items-center rounded-button bg-primary px-6 font-semibold text-on-primary">Browse destinations</Link>
+        <Link to="/products" className="mt-6 inline-flex h-11 items-center rounded-button bg-primary px-6 font-semibold text-on-primary">Browse products</Link>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export function CartView({ signedIn, today }: { signedIn: boolean; today: string
           <p className="mt-1 text-sm text-muted">{lines.length} item{lines.length > 1 ? "s" : ""} · Prices in PHP</p>
         </div>
         {lines.map((l, i) => (
-          <CartItem key={l.id} line={l} problem={problems[i]} today={today} rate={totals.rate} total={totals.lineTotal(l)} />
+          <CartItem key={l.id} line={l} problem={problems[i]} today={today} total={totals.lineTotal(l)} />
         ))}
       </div>
       <aside className="lg:pt-[72px]">
@@ -38,7 +38,7 @@ export function CartView({ signedIn, today }: { signedIn: boolean; today: string
           <h2 className="text-[17px] font-semibold">Order summary</h2>
           {lines.map((l) => (
             <div key={l.id} className="flex justify-between gap-3 text-sm">
-              <span className="text-muted">{lineName(l)}{isRental(l) && lineDays(l) > 0 ? ` · ${formatPHP(totals.rate)} × ${dayCount(lineDays(l))}` : ""}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</span>
+              <span className="text-muted">{lineName(l)}{isRental(l) && lineDays(l) > 0 ? ` · ${formatPHP(l.plan.price)} × ${dayCount(lineDays(l))}` : ""}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</span>
               <span className="font-medium">{formatPHP(totals.lineTotal(l))}</span>
             </div>
           ))}
@@ -68,7 +68,6 @@ const dayCount = (n: number) => `${n} day${n > 1 ? "s" : ""}`;
 export function TotalRows({ totals: t }: { totals: ReturnType<typeof cartTotals> }) {
   return (
     <>
-      {t.mixedRates && <p className="text-xs text-muted">Pocket WiFi is charged at the highest daily rate in your cart.</p>}
       {t.days > 0 && (
         <div className="flex justify-between gap-3 border-t border-border pt-4 text-sm">
           <span className="text-muted">Delivery fee</span>
@@ -84,7 +83,7 @@ export function TotalRows({ totals: t }: { totals: ReturnType<typeof cartTotals>
   );
 }
 
-function CartItem({ line: l, problem, today, rate, total }: { line: CartLine; problem: string | null; today: string; rate: number; total: number }) {
+function CartItem({ line: l, problem, today, total }: { line: CartLine; problem: string | null; today: string; total: number }) {
   const { update, remove } = useCart();
   const rental = isRental(l);
   const days = lineDays(l);
@@ -96,7 +95,7 @@ function CartItem({ line: l, problem, today, rate, total }: { line: CartLine; pr
             <Pill>{TYPE_LABEL[l.product.product_type] ?? l.product.product_type}</Pill>
           </div>
           <h2 className="text-[17px] font-semibold">{lineName(l)}</h2>
-          <p className="text-[13px] text-muted">{rental ? `${formatPHP(rate)} per day · ${l.quantity} device${l.quantity > 1 ? "s" : ""}` : "Starts when you activate"}</p>
+          <p className="text-[13px] text-muted">{rental ? `${formatPHP(l.plan.price)} per day · ${l.quantity} device${l.quantity > 1 ? "s" : ""}` : "Starts when you activate"}</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <span className="text-lg font-bold">{formatPHP(total)}</span>
@@ -116,7 +115,7 @@ function CartItem({ line: l, problem, today, rate, total }: { line: CartLine; pr
             <DateField label="Start date" value={l.start_date} min={today} onChange={(v) => update(l.id, { start_date: v })} />
             <DateField label="End date" value={l.end_date} min={l.start_date ?? today} onChange={(v) => update(l.id, { end_date: v })} />
           </div>
-          {days > 0 && <p className="text-[13px] font-medium">{dayCount(days)} × {formatPHP(rate)} × {l.quantity} device{l.quantity > 1 ? "s" : ""}</p>}
+          {days > 0 && <p className="text-[13px] font-medium">{dayCount(days)} × {formatPHP(l.plan.price)} × {l.quantity} device{l.quantity > 1 ? "s" : ""}</p>}
           <LockNote>Rental dates are final once ordered — contact support to change them.</LockNote>
         </div>
       )}
@@ -130,7 +129,7 @@ export function DateField({ label, value, min, onChange }: { label: string; valu
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium">{label}</label>
-      <input id={id} type="date" min={min} value={value ?? ""} onChange={(e) => onChange(e.target.value)} className="h-11 rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary" />
+      <input id={id} type="date" min={min} max="9999-12-31" value={value ?? ""} onChange={(e) => onChange(e.target.value)} className="h-11 scroll-mb-64 rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary" />
     </div>
   );
 }

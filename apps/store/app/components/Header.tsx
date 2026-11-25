@@ -5,7 +5,6 @@ import { HeaderActions } from "./HeaderActions";
 import { Logo } from "./Logo";
 
 const NAV = [
-  ["/destinations", "Destinations"],
   ["/products", "Products"],
   ["/contact", "Help"],
 ] as const;

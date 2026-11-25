@@ -1,14 +1,15 @@
-import type { Plan } from "@air-roam/api";
+import type { Destination, Plan, WifiPlan } from "@air-roam/api";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { isRental } from "./rental";
 
 export const CART_KEY = "air-roam-cart"; // no secrets: plans, quantities and dates only
 
 export interface CartLine {
   id: string;
   product: { id: string; product_name: string; product_type: string };
-  country_code: string;
-  plan?: Plan; // SIM/eSIM
-  daily_rate?: string; // Pocket WiFi: the chosen country's own rate
+  country_code: string; // "" when bought for a whole region
+  region?: Destination["region"]; // Multi-Country Explorer lines only
+  plan: Plan | WifiPlan; // WifiPlan (priced per day) for Pocket WiFi
   quantity: number;
   start_date?: string; // YYYY-MM-DD, Pocket WiFi only
   end_date?: string;
@@ -18,8 +19,7 @@ export type NewLine = Omit<CartLine, "id" | "quantity">;
 
 function isLine(x: unknown): x is CartLine {
   const l = x as CartLine;
-  const priced = l?.product?.product_type === "pocket_wifi" ? typeof l.daily_rate === "string" : typeof l?.plan?.price === "string";
-  return priced && typeof l.id === "string" && typeof l.quantity === "number" && typeof l.product.id === "string" && typeof l.country_code === "string";
+  return typeof l?.plan?.price === "string" && typeof l.id === "string" && typeof l.quantity === "number" && typeof l.product?.id === "string" && typeof l.country_code === "string";
 }
 
 /** Read the saved cart; anything malformed resets to an empty cart. */
@@ -57,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback((n: NewLine) => {
     setLines((ls) => {
-      const existing = n.plan && ls.find((l) => l.product.id === n.product.id && l.country_code === n.country_code && l.plan?.id === n.plan?.id);
+      const existing = !isRental(n) && ls.find((l) => l.product.id === n.product.id && l.country_code === n.country_code && l.plan.id === n.plan.id);
       if (existing) return ls.map((l) => (l === existing ? { ...l, quantity: Math.min(10, l.quantity + 1) } : l));
       return [...ls, { ...n, id: crypto.randomUUID(), quantity: 1 }];
     });

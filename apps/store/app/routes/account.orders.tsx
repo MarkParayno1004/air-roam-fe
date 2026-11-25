@@ -13,7 +13,7 @@ export default function MyOrders() {
       {isLoading && <p className="text-muted">Loading your orders…</p>}
       {isError && <p role="alert" className="text-danger">We couldn't load your orders. Please refresh.</p>}
       {data?.results.length === 0 && (
-        <p className="text-muted">No orders yet. <Link to="/destinations" className="font-semibold text-primary">Find a plan</Link></p>
+        <p className="text-muted">No orders yet. <Link to="/products" className="font-semibold text-primary">Find a plan</Link></p>
       )}
       {data?.results.map((o) => <OrderCard key={o.id} order={o} />)}
     </div>

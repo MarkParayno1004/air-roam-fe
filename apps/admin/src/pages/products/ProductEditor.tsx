@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useStaff } from "../../auth/StaffProvider";
+import { BackLink } from "../../components/BackLink";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { errorMessage, toFieldErrors } from "../../lib/errors";
 import { PRODUCT_TYPES } from "../../lib/options";
@@ -61,7 +62,7 @@ export function ProductEditor() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link to="/products" className="text-[13px] text-muted hover:text-primary">Products / {isNew ? "New product" : product?.product_name ?? "…"}</Link>
+      <BackLink to="/products" />
       <h1 className="text-2xl font-bold">{isNew ? "New product" : "Edit product"}</h1>
       {actionError && <p role="alert" className="text-sm text-danger">{actionError}</p>}
 

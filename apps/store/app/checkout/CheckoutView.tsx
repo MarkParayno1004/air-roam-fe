@@ -42,7 +42,7 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
     return (
       <Shell>
         <Notice tone="grey" title="The plans in your cart are no longer available.">
-          <Link to="/destinations" className="font-semibold text-primary">Browse current plans</Link>
+          <Link to="/products" className="font-semibold text-primary">Browse current plans</Link>
         </Notice>
       </Shell>
     );
@@ -50,7 +50,7 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
   if (lines.length === 0) {
     return (
       <Shell>
-        <p className="text-muted">Your cart is empty. <Link to="/destinations" className="font-semibold text-primary">Browse destinations</Link></p>
+        <p className="text-muted">Your cart is empty. <Link to="/products" className="font-semibold text-primary">Browse products</Link></p>
       </Shell>
     );
   }
@@ -77,7 +77,7 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
                   <p className="font-medium">{lineName(l)}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</p>
                   <p className="text-xs text-muted">
                     {isRental(l) && l.start_date && l.end_date
-                      ? `${formatDate(l.start_date)} – ${formatDate(l.end_date)} · ${formatPHP(totals.rate)} × ${lineDays(l)} day${lineDays(l) > 1 ? "s" : ""}`
+                      ? `${formatDate(l.start_date)} – ${formatDate(l.end_date)} · ${formatPHP(l.plan.price)} × ${lineDays(l)} day${lineDays(l) > 1 ? "s" : ""}`
                       : "Starts when you activate"}
                   </p>
                   {isRental(l) && <div className="mt-1"><LockNote>Rental dates are final once ordered.</LockNote></div>}

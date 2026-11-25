@@ -11,6 +11,11 @@ export function countriesLabel(codes: string[]): string {
   return codes.length === 1 ? countryName(codes[0]) : `${codes.length} countries`;
 }
 
+function wifiFrom(r: StaffRegion): string | null {
+  const prices = r.plans.filter((p) => p.for_wifi && p.is_active).map((p) => Number(p.price));
+  return prices.length ? `from ${formatPHP(String(Math.min(...prices)))}/day` : null;
+}
+
 export function RegionsList() {
   const { client } = useStaff();
   const navigate = useNavigate();
@@ -34,7 +39,7 @@ export function RegionsList() {
             <tr className="border-b border-border text-left text-xs text-muted">
               <th className="p-3 font-medium">Region</th>
               <th className="p-3 font-medium">Countries</th>
-              <th className="p-3 font-medium">Pocket WiFi / day</th>
+              <th className="p-3 font-medium">Pocket WiFi</th>
               <th className="p-3 font-medium">Plans</th>
               <th className="p-3 font-medium">Status</th>
             </tr>
@@ -46,8 +51,8 @@ export function RegionsList() {
               <tr key={r.id} className="cursor-pointer border-b border-border last:border-0 hover:bg-background" onClick={() => navigate(`/regions/${r.id}`)}>
                 <td className="p-3 font-medium"><Link to={`/regions/${r.id}`} onClick={(e) => e.stopPropagation()}>{r.name}</Link></td>
                 <td className="p-3"><span title={r.countries.map(countryName).join(", ")}>{countriesLabel(r.countries)}</span></td>
-                <td className="p-3">{r.pocket_wifi_daily_rate ? formatPHP(r.pocket_wifi_daily_rate) : "—"}</td>
-                <td className="p-3">{r.plans.length}</td>
+                <td className="p-3">{wifiFrom(r) ?? "—"}</td>
+                <td className="p-3">{r.plans.filter((p) => !p.for_wifi).length}</td>
                 <td className="p-3"><Pill tone={r.is_active ? "teal" : "grey"}>{r.is_active ? "Active" : "Inactive"}</Pill></td>
               </tr>
             ))}

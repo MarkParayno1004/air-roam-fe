@@ -381,6 +381,24 @@ export interface paths {
         patch: operations["v1_staff_bookings_partial_update"];
         trace?: never;
     };
+    "/api/v1/staff/countries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Countries on sale (those in an active region) and whether the store shows them as popular. */
+        get: operations["v1_staff_countries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Only the countries sent change, so ones hidden by an inactive region keep their flag. */
+        patch: operations["v1_staff_countries_partial_update"];
+        trace?: never;
+    };
     "/api/v1/staff/orders": {
         parameters: {
             query?: never;
@@ -618,7 +636,7 @@ export interface components {
         CheckoutLine: {
             /** Format: uuid */
             product_id: string;
-            country_code: string;
+            country_code?: string;
             /** Format: uuid */
             region_plan_id?: string | null;
             quantity: number;
@@ -645,16 +663,22 @@ export interface components {
         CsrfToken: {
             csrfToken: string;
         };
-        /** @description A country and what it costs there. Regions stay internal. */
+        /** @description A country, its price region and what it costs there. */
         Destination: {
+            region: components["schemas"]["DestinationRegion"];
             country_code: string;
             country_name: string;
             slug: string;
             /** Format: decimal */
             from_price: string;
-            /** Format: decimal */
-            pocket_wifi_daily_rate: string | null;
             plans: components["schemas"]["Plan"][];
+            wifi_plans: components["schemas"]["WifiPlan"][];
+            is_popular: boolean;
+        };
+        DestinationRegion: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
         LoginInput: {
             /** Format: email */
@@ -853,6 +877,9 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["StaffUser"][];
         };
+        PatchedPopularChanges: {
+            countries?: components["schemas"]["PopularChange"][];
+        };
         PatchedStaffBookingInput: {
             /** Format: date-time */
             start_at?: string;
@@ -865,8 +892,10 @@ export interface components {
             /** Format: uuid */
             readonly id?: string;
             readonly label?: string;
+            for_wifi?: boolean;
+            name?: string;
             data_mb?: number | null;
-            validity_days?: number;
+            validity_days?: number | null;
             /** Format: decimal */
             price?: string;
             is_active?: boolean;
@@ -894,8 +923,6 @@ export interface components {
             readonly id?: string;
             name?: string;
             countries?: string[];
-            /** Format: decimal */
-            pocket_wifi_daily_rate?: string | null;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at?: string;
@@ -957,6 +984,10 @@ export interface components {
             validity_days: number;
             /** Format: decimal */
             price: string;
+        };
+        PopularChange: {
+            code: string;
+            is_popular: boolean;
         };
         PriceUpdate: {
             name: string;
@@ -1053,6 +1084,12 @@ export interface components {
             readonly rental_days: number;
             rental_days_changed: boolean;
         };
+        StaffCountry: {
+            code: string;
+            name: string;
+            region: string;
+            is_popular: boolean;
+        };
         StaffOrder: {
             /** Format: uuid */
             readonly id: string;
@@ -1081,8 +1118,10 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly label: string;
+            for_wifi?: boolean;
+            name?: string;
             data_mb?: number | null;
-            validity_days: number;
+            validity_days?: number | null;
             /** Format: decimal */
             price: string;
             is_active?: boolean;
@@ -1110,8 +1149,6 @@ export interface components {
             readonly id: string;
             name: string;
             countries: string[];
-            /** Format: decimal */
-            pocket_wifi_daily_rate?: string | null;
             is_active?: boolean;
             /** Format: date-time */
             readonly created_at: string;
@@ -1159,6 +1196,15 @@ export interface components {
             pin_point_label?: string | null;
             readonly effective_address: string;
             readonly permissions: components["schemas"]["PermissionsEnum"][];
+        };
+        WifiPlan: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly name: string;
+            readonly label: string;
+            readonly data_mb: number | null;
+            /** Format: decimal */
+            readonly price: string;
         };
     };
     responses: never;
@@ -1798,6 +1844,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffBookingUpdateResponse"];
+                };
+            };
+        };
+    };
+    v1_staff_countries_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCountry"][];
+                };
+            };
+        };
+    };
+    v1_staff_countries_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPopularChanges"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPopularChanges"];
+                "multipart/form-data": components["schemas"]["PatchedPopularChanges"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCountry"][];
                 };
             };
         };

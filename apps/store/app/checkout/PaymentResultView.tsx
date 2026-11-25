@@ -47,7 +47,7 @@ export function PaymentResultView({ orderId, intervalMs = 2000, maxWaitMs = 30_0
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <h1 className="text-xl font-semibold">Payment not completed</h1>
           <p className="text-sm text-muted">This order is {status}. Nothing was charged.</p>
-          <Link to="/destinations" className="font-semibold text-primary">Browse plans</Link>
+          <Link to="/products" className="font-semibold text-primary">Browse plans</Link>
         </Card>
       )}
     </div>

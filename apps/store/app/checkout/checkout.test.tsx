@@ -80,7 +80,7 @@ test("a different server total with no notices is shown before paying", async ()
 
 test("cents don't cause a false price-change screen", async () => {
   const onRedirect = vi.fn();
-  const wifi: CartLine = { id: "w", product: { id: "pw", product_name: "WiFi", product_type: "pocket_wifi" }, country_code: "JP", daily_rate: "33.33", quantity: 1, start_date: "2099-12-12", end_date: "2099-12-15" };
+  const wifi: CartLine = { id: "w", product: { id: "pw", product_name: "WiFi", product_type: "pocket_wifi" }, country_code: "JP", plan: { id: "wp", name: "Unlimited", label: "Unlimited", data_mb: null, price: "33.33" }, quantity: 1, start_date: "2099-12-12", end_date: "2099-12-15" };
   const c = client(() => Promise.resolve({ order: order({ total_amount: "299.99", delivery_fee: "200.00" }), invoice_url: "https://x/inv", price_updates: [], removed_lines: [] }));
   wrap(c, <CheckoutView onRedirect={onRedirect} />, [wifi]);
   await pay();

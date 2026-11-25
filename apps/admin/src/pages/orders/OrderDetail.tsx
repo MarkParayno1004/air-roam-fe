@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useStaff } from "../../auth/StaffProvider";
+import { BackLink } from "../../components/BackLink";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { errorMessage } from "../../lib/errors";
 import { nextStatuses } from "../../lib/transitions";
@@ -46,7 +47,7 @@ export function OrderDetail() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link to="/orders" className="text-[13px] text-muted hover:text-primary">Orders / {o.id.slice(0, 8)}</Link>
+      <BackLink to="/orders" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">Order {o.id.slice(0, 8)}</h1>

@@ -18,10 +18,11 @@ test("paths come from pre-rendered index.html files", () => {
   expect(pathsFromFiles(["index.html", "destinations/japan/index.html", "assets/x.js", "terms/index.html"])).toEqual(["/", "/destinations/japan", "/terms"]);
 });
 
-test("json-ld offer range in PHP covers plans and the WiFi day rate", () => {
+test("json-ld offer range in PHP covers plans and WiFi day rates", () => {
   const ld = productJsonLd({
-    country_code: "JP", country_name: "Japan", slug: "japan", from_price: "100.00", pocket_wifi_daily_rate: "100.00",
+    region: { id: "r-asia", name: "Asia" }, country_code: "JP", country_name: "Japan", slug: "japan", from_price: "100.00", is_popular: false,
     plans: [{ price: "449.00" }, { price: "1299.00" }] as never,
+    wifi_plans: [{ price: "100.00" }, { price: "350.00" }] as never,
   });
-  expect(ld.offers).toMatchObject({ priceCurrency: "PHP", lowPrice: "100.00", highPrice: "1299.00", offerCount: 3 });
+  expect(ld.offers).toMatchObject({ priceCurrency: "PHP", lowPrice: "100.00", highPrice: "1299.00", offerCount: 4 });
 });

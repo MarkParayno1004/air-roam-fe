@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLoaderData, useSearchParams, type ClientLoaderFunctionArgs } from "react-router";
 import { liveOrPrerendered } from "../lib/loaders";
-import { PopularDestinations } from "../catalog/PopularDestinations";
+import { DestinationGrid } from "../catalog/DestinationGrid";
 import { fetchDestinations } from "../lib/catalog";
 import { buildMeta } from "../seo/meta";
 
@@ -35,7 +35,7 @@ export default function Destinations() {
         placeholder="Search a country"
         className="h-12 max-w-md rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary"
       />
-      <PopularDestinations destinations={data} limit={Infinity} query={q} />
+      <DestinationGrid destinations={data} query={q} />
     </div>
   );
 }

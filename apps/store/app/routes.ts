@@ -5,6 +5,7 @@ export default [
   route("destinations", "routes/destinations.tsx"),
   route("destinations/:slug", "routes/destination.tsx"),
   route("products", "routes/products.tsx"),
+  route("products/multi-country", "routes/multi-country.tsx"),
   route("terms", "routes/legal.tsx", { id: "terms" }),
   route("privacy", "routes/legal.tsx", { id: "privacy" }),
   route("refund-policy", "routes/legal.tsx", { id: "refund-policy" }),

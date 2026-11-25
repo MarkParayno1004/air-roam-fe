@@ -15,9 +15,9 @@ export function todayISO(): string {
 
 export const isRental = (l: Pick<CartLine, "product">) => l.product.product_type === "pocket_wifi";
 
-/** Product, country and plan: two products can share a country and plan, so the product name must show. */
+/** Product, country (or region) and plan: two products can share a place and plan, so the product name must show. */
 export function lineName(l: CartLine): string {
-  return `${l.product.product_name} · ${countryName(l.country_code)}${l.plan ? ` ${l.plan.label}` : ""}`;
+  return `${l.product.product_name} · ${l.region?.name ?? countryName(l.country_code)} ${l.plan.label}`;
 }
 
 export function lineProblem(l: Omit<CartLine, "id">, today: string): string | null {
@@ -25,7 +25,8 @@ export function lineProblem(l: Omit<CartLine, "id">, today: string): string | nu
   if (!isRental(l)) return null;
   if (!l.start_date || !l.end_date) return "Choose your rental dates to continue.";
   if (l.start_date < today) return "The start date can't be in the past.";
-  if (rentalDays(l.start_date, l.end_date) < 1) return "The end date must be after the start date.";
+  // not "< 1": a typed 5-digit year gives NaN
+  if (!(rentalDays(l.start_date, l.end_date) >= 1)) return "The end date must be after the start date.";
   return null;
 }
 
@@ -36,18 +37,15 @@ export const DELIVERY_FEE = 200;
 export const DELIVERY_FEE_MAX_DAYS = 7;
 
 export const lineDays = (l: CartLine) =>
-  isRental(l) && l.start_date && l.end_date ? Math.max(0, rentalDays(l.start_date, l.end_date)) : 0;
+  isRental(l) && l.start_date && l.end_date ? Math.max(0, rentalDays(l.start_date, l.end_date) || 0) : 0;
 
-/** Every Pocket WiFi line pays the highest daily rate in the cart; the fee depends on all their days together. */
+/** Each line pays its own plan's price; the delivery fee depends on all Pocket WiFi days together. */
 export function cartTotals(lines: CartLine[]) {
-  const rentals = lines.filter(isRental);
-  const rates = rentals.map((l) => Number(l.daily_rate));
-  const rate = Math.max(0, ...rates);
-  const days = rentals.reduce((n, l) => n + lineDays(l), 0);
+  const days = lines.reduce((n, l) => n + lineDays(l), 0);
   const deliveryFee = days > 0 && days <= DELIVERY_FEE_MAX_DAYS ? DELIVERY_FEE : 0;
-  const lineTotal = (l: CartLine) => l.quantity * (isRental(l) ? rate * lineDays(l) : Number(l.plan?.price));
+  const lineTotal = (l: CartLine) => l.quantity * Number(l.plan.price) * (isRental(l) ? lineDays(l) : 1);
   const total = lines.reduce((sum, l) => sum + lineTotal(l), deliveryFee);
-  return { rate, days, deliveryFee, total, lineTotal, mixedRates: new Set(rates).size > 1 };
+  return { days, deliveryFee, total, lineTotal };
 }
 
 /** API datetime → YYYY-MM-DD in Manila. */

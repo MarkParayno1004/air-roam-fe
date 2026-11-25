@@ -12,10 +12,15 @@ const esimProduct = { id: "pe", product_name: "Air Roam eSIM", product_type: "es
 const wifiProduct = { id: "pw", product_name: "Air Roam Pocket WiFi", product_type: "pocket_wifi" };
 const plan = { id: "plan1", label: "5GB · 7 days", data_mb: 5120, validity_days: 7, price: "399.00" };
 const esim = (over: Partial<CartLine> = {}): CartLine => ({ id: "e", product: esimProduct, country_code: "JP", plan, quantity: 1, ...over });
+const wifiPlan = (rate: number, gb: number | null = null) => ({
+  id: `wp-${gb}-${rate}`, name: gb ? "Regular" : "Unlimited", label: gb ? `Regular · ${gb}GB/day` : "Unlimited", data_mb: gb && gb * 1024, price: rate.toFixed(2),
+});
 const wifi = (code: string, rate: number, days: number, over: Partial<CartLine> = {}): CartLine => ({
-  id: `w-${code}`, product: wifiProduct, country_code: code, daily_rate: rate.toFixed(2), quantity: 1,
+  id: `w-${code}`, product: wifiProduct, country_code: code, plan: wifiPlan(rate), quantity: 1,
   start_date: "2026-12-12", end_date: addDays("2026-12-12", days), ...over,
 });
+
+const wholeRegion = { country_code: "", region: { id: "r-asia", name: "Asia" } };
 
 const wrapper = ({ children }: { children: ReactNode }) => <CartProvider>{children}</CartProvider>;
 
@@ -25,15 +30,16 @@ test("rental days between dates", () => {
 });
 
 test.each([
-  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 2)], 100, 200, 800],
-  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 3)], 100, 200, 900],
-  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 4)], 100, 0, 800],
-  [[wifi("FR", 10, 30), wifi("JP", 100, 2)], 100, 0, 3200],
-  [[wifi("JP", 100, 4, { quantity: 2 })], 100, 200, 1000],
-  [[esim()], 0, 0, 399],
-  [[esim(), wifi("JP", 100, 2)], 100, 200, 799],
-])("highest rate, delivery fee and total %#", (lines, rate, deliveryFee, total) => {
-  expect(cartTotals(lines)).toMatchObject({ rate, deliveryFee, total });
+  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 2)], 200, 520],
+  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 3)], 200, 530],
+  [[wifi("JP", 100, 2), wifi("US", 50, 2), wifi("FR", 10, 4)], 0, 340],
+  [[wifi("FR", 10, 30), wifi("JP", 100, 2)], 0, 500],
+  [[wifi("JP", 100, 4, { quantity: 2 })], 200, 1000],
+  [[esim()], 0, 399],
+  [[esim(), wifi("JP", 100, 2)], 200, 799],
+  [[wifi("JP", 200, 2, { plan: wifiPlan(200, 1) }), wifi("US", 500, 2)], 200, 1600],
+])("each line pays its own price, plus delivery fee %#", (lines, deliveryFee, total) => {
+  expect(cartTotals(lines)).toMatchObject({ deliveryFee, total });
 });
 
 test("no dates yet: no days and no fee", () => {
@@ -41,12 +47,15 @@ test("no dates yet: no days and no fee", () => {
 });
 
 test("end before start never makes a negative total", () => {
-  expect(cartTotals([wifi("JP", 100, -3), wifi("US", 50, 2)])).toMatchObject({ days: 2, total: 400 });
+  expect(cartTotals([wifi("JP", 100, -3), wifi("US", 50, 2)])).toMatchObject({ days: 2, total: 300 });
 });
 
 test("rental validation", () => {
   expect(lineIsValid(wifi("JP", 100, 2, { start_date: undefined }), TODAY)).toBe(false);
   expect(lineIsValid(wifi("JP", 100, 0), TODAY)).toBe(false);
+  const typo = wifi("JP", 100, 2, { end_date: "20999-12-12" });
+  expect(lineIsValid(typo, TODAY)).toBe(false);
+  expect(cartTotals([typo]).total).toBe(0);
   expect(lineIsValid(wifi("JP", 100, 2, { start_date: "2026-11-20" }), TODAY)).toBe(false);
   expect(lineIsValid(wifi("JP", 100, 2), TODAY)).toBe(true);
   expect(lineIsValid(esim(), TODAY)).toBe(true);
@@ -54,17 +63,20 @@ test("rental validation", () => {
 
 test("line names", () => {
   expect(lineName(esim())).toBe("Air Roam eSIM · Japan 5GB · 7 days");
-  expect(lineName(wifi("JP", 100, 2))).toBe("Air Roam Pocket WiFi · Japan");
+  expect(lineName(wifi("JP", 100, 2))).toBe("Air Roam Pocket WiFi · Japan Unlimited");
+  expect(lineName(wifi("JP", 200, 2, { plan: wifiPlan(200, 1) }))).toBe("Air Roam Pocket WiFi · Japan Regular · 1GB/day");
+  expect(lineName(esim(wholeRegion))).toBe("Air Roam eSIM · Asia 5GB · 7 days");
 });
 
-test("corrupt carts and carts saved before region pricing reset", () => {
+test("corrupt carts and carts saved before region pricing or WiFi plans reset", () => {
   const old = { id: "1", quantity: 1, variant: { id: "v", name: "Japan", price: "799.00", countries: ["JP"], pricing_unit: "per_plan" } };
-  for (const bad of ["{oops", JSON.stringify([{ nope: true }]), JSON.stringify([old]), JSON.stringify([{ ...esim(), plan: undefined }]), JSON.stringify([null])]) {
+  const oldWifi = { ...wifi("JP", 100, 2), plan: undefined, daily_rate: "100.00" };
+  for (const bad of [JSON.stringify([oldWifi]), "{oops", JSON.stringify([{ nope: true }]), JSON.stringify([old]), JSON.stringify([{ ...esim(), plan: undefined }]), JSON.stringify([null])]) {
     localStorage.setItem(CART_KEY, bad);
     expect(loadCart()).toEqual([]);
   }
-  localStorage.setItem(CART_KEY, JSON.stringify([esim(), wifi("JP", 100, 2)]));
-  expect(loadCart()).toHaveLength(2);
+  localStorage.setItem(CART_KEY, JSON.stringify([esim(), wifi("JP", 100, 2), esim(wholeRegion)]));
+  expect(loadCart()).toHaveLength(3);
 });
 
 test("same plan and country increments; another country or WiFi is a new line", () => {
@@ -77,15 +89,17 @@ test("same plan and country increments; another country or WiFi is a new line", 
   act(() => result.current.add({ ...newEsim, country_code: "KR" }));
   act(() => result.current.add(newWifi));
   act(() => result.current.add(newWifi));
-  expect(result.current.lines.map((l) => l.quantity)).toEqual([2, 1, 1, 1]);
-  expect(JSON.parse(localStorage.getItem(CART_KEY)!)).toHaveLength(4);
+  act(() => result.current.add({ ...newEsim, ...wholeRegion }));
+  act(() => result.current.add({ ...newEsim, ...wholeRegion }));
+  expect(result.current.lines.map((l) => l.quantity)).toEqual([2, 1, 1, 1, 2]);
+  expect(JSON.parse(localStorage.getItem(CART_KEY)!)).toHaveLength(5);
 });
 
 test("API lines", () => {
-  expect(toApiLine(esim(), 100)).toEqual({ product_id: "pe", country_code: "JP", region_plan_id: "plan1", quantity: 1, expected_unit_price: "399.00" });
-  // the EU line pays the cart's highest rate, so that is what the customer expects
-  expect(toApiLine(wifi("FR", 10, 2), 100)).toEqual({
-    product_id: "pw", country_code: "FR", quantity: 1, expected_unit_price: "100.00",
+  expect(toApiLine(esim())).toEqual({ product_id: "pe", country_code: "JP", region_plan_id: "plan1", quantity: 1, expected_unit_price: "399.00" });
+  expect(toApiLine(esim(wholeRegion))).not.toHaveProperty("country_code");
+  expect(toApiLine(wifi("FR", 10, 2))).toEqual({
+    product_id: "pw", country_code: "FR", region_plan_id: "wp-null-10", quantity: 1, expected_unit_price: "10.00",
     start_at: "2026-12-12T00:00:00+08:00", end_at: "2026-12-14T00:00:00+08:00",
   });
 });
@@ -101,15 +115,12 @@ function renderCart(lines: CartLine[], signedIn = false) {
   );
 }
 
-const HIGHEST = "Pocket WiFi is charged at the highest daily rate in your cart.";
-
-test("summary shows the highest-rate note, delivery fee and total", () => {
+test("summary shows each line at its own rate, delivery fee and total", () => {
   renderCart([wifi("JP", 100, 2), wifi("US", 50, 2)]);
   const summary = screen.getByRole("complementary");
-  expect(summary).toHaveTextContent(HIGHEST);
-  expect(summary).toHaveTextContent("Air Roam Pocket WiFi · United States · ₱100 × 2 days₱200");
+  expect(summary).toHaveTextContent("Air Roam Pocket WiFi · United States Unlimited · ₱50 × 2 days₱100");
   expect(summary).toHaveTextContent("Delivery fee₱200");
-  expect(summary).toHaveTextContent("Total (PHP)₱600");
+  expect(summary).toHaveTextContent("Total (PHP)₱500");
 });
 
 test("8 days is free delivery; 7 days still pays", () => {
@@ -120,10 +131,16 @@ test("8 days is free delivery; 7 days still pays", () => {
   expect(screen.getByRole("complementary")).toHaveTextContent("Delivery feeFree");
 });
 
-test("no note when WiFi rates match, no fee row without WiFi", () => {
-  const { unmount } = renderCart([wifi("JP", 100, 2), wifi("KR", 100, 2)]);
-  expect(screen.queryByText(HIGHEST)).not.toBeInTheDocument();
-  unmount();
+test("each data plan is shown at its own rate", () => {
+  renderCart([wifi("JP", 200, 2, { plan: wifiPlan(200, 1) }), wifi("US", 500, 2)]);
+  const summary = screen.getByRole("complementary");
+  expect(summary).toHaveTextContent("Japan Regular · 1GB/day · ₱200 × 2 days₱400");
+  expect(summary).toHaveTextContent("United States Unlimited · ₱500 × 2 days₱1,000");
+  expect(summary).toHaveTextContent("Total (PHP)₱1,600");
+  expect(screen.getByText("₱200 per day · 1 device")).toBeInTheDocument();
+});
+
+test("no fee row without WiFi", () => {
   renderCart([esim()]);
   expect(screen.queryByText("Delivery fee")).not.toBeInTheDocument();
   expect(screen.getByText("Starts when you activate")).toBeInTheDocument();
