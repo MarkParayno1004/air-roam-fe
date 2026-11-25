@@ -7,7 +7,7 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
     title: "Terms of service",
     body: [
       "Air Roam sells roaming data plans (eSIM, SIM) and Pocket WiFi rentals to travelers. Prices are in Philippine pesos (PHP) and payments are processed by Xendit.",
-      "Pocket WiFi rental dates are final once ordered; contact support to change them. eSIM and SIM travel dates can be changed until the start date.",
+      "Pocket WiFi rental dates are final once ordered; contact support to change them. eSIM and SIM plan days start when the plan is activated. Pocket WiFi orders of 7 days or fewer in total have a ₱200 delivery fee.",
     ],
   },
   "/privacy": {

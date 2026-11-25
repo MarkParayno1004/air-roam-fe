@@ -9,7 +9,7 @@ const EMAIL = process.env.E2E_ADMIN_EMAIL ?? "e2e-admin@example.com";
 const PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "e2e-admin-pass-123";
 const ADMIN = "http://localhost:5174";
 
-test("admin signs in, sees the overview and edits a multi-country pack", async ({ page }) => {
+test("admin signs in, sees the overview and a region's plans", async ({ page }) => {
   await page.goto(ADMIN);
   await page.getByLabel("Email").fill(EMAIL);
   await page.getByLabel("Password").fill(PASSWORD);
@@ -19,15 +19,12 @@ test("admin signs in, sees the overview and edits a multi-country pack", async (
   await expect(page.getByRole("navigation", { name: "Admin" })).toContainText("Users");
   await page.screenshot({ path: "test-results/admin-overview.png", fullPage: true });
 
-  await page.getByRole("link", { name: "Products (CMS)" }).click();
-  await page.getByLabel("Coverage").selectOption("multi");
-  await page.getByRole("link", { name: "Air Roam eSIM" }).click();
-  await expect(page.getByRole("heading", { name: "Plans" })).toBeVisible();
-  await expect(page.getByText("8 countries").first()).toBeVisible();
-  await page.getByRole("button", { name: "Edit Asia 8 countries · 10GB · 15 days" }).click();
-  await expect(page.getByRole("complementary", { name: "Store preview" })).toContainText("Asia 8 countries");
-  await page.screenshot({ path: "test-results/admin-product-editor.png", fullPage: true });
+  await page.getByRole("link", { name: "Regions & prices" }).click();
+  await page.getByRole("link", { name: "Asia 1" }).click();
+  await expect(page.getByRole("heading", { name: "SIM/eSIM plans" })).toBeVisible();
+  await expect(page.getByText("5GB · 7 days")).toBeVisible();
+  await page.screenshot({ path: "test-results/admin-region-editor.png", fullPage: true });
 
   await page.reload(); // staff session restored from the HttpOnly staff cookie
-  await expect(page.getByRole("heading", { name: "Edit product" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Edit region" })).toBeVisible();
 });

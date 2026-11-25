@@ -86,11 +86,7 @@ export function OrderDetail() {
                 <p className="text-xs text-muted">
                   {l.quantity} × {formatPHP(l.unit_price)}{l.rental_days ? ` × ${l.rental_days} days` : ""} · {l.countries_snapshot.join(", ")}
                 </p>
-                {l.booking ? (
-                  <p className="mt-1 text-xs">Booking: {formatDate(l.booking.start_at)} – {formatDate(l.booking.end_at)} · {l.booking.destination_country_codes.join(", ")}</p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted">No travel dates yet</p>
-                )}
+                {l.booking && <p className="mt-1 text-xs">Booking: {formatDate(l.booking.start_at)} – {formatDate(l.booking.end_at)} · {l.booking.destination_country_codes.join(", ")}</p>}
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className="font-semibold">{formatPHP(l.line_total)}</span>
@@ -98,6 +94,7 @@ export function OrderDetail() {
               </div>
             </div>
           ))}
+          {Number(o.delivery_fee) > 0 && <div className="flex justify-between text-sm"><span className="text-muted">Delivery fee</span><span>{formatPHP(o.delivery_fee)}</span></div>}
           <div className="flex justify-between border-t border-border pt-3 font-semibold"><span>Total</span><span>{formatPHP(o.total_amount)} PHP</span></div>
         </Card>
         <div className="flex flex-col gap-5">

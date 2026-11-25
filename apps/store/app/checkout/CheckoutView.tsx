@@ -3,7 +3,8 @@ import { Button, Card, Notice, formatDate, formatPHP } from "@air-roam/ui";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../auth/AuthProvider";
-import { isRental, lineIsValid, lineTotal, rentalDays, todayISO } from "../cart/rental";
+import { TotalRows } from "../cart/CartView";
+import { cartTotals, isRental, lineDays, lineIsValid, lineName, todayISO } from "../cart/rental";
 import { useCart } from "../cart/store";
 import { LockNote } from "../components/LockNote";
 import { usePlaceOrder } from "./usePlaceOrder";
@@ -17,13 +18,15 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
   const [phase, setPhase] = useState<Phase>({ kind: "review" });
   const today = todayISO();
   const valid = lines.length > 0 && lines.every((l) => lineIsValid(l, today));
-  const total = lines.reduce((s, l) => s + lineTotal(l), 0);
+  const totals = cartTotals(lines);
 
   async function onPay() {
     try {
       const res = await place();
       if (!res) return;
-      if (res.price_updates.length || res.removed_lines.length) setPhase({ kind: "changed", res });
+      // Never send the traveler to pay an amount they weren't shown.
+      const changed = res.price_updates.length || res.removed_lines.length || res.order.total_amount !== totals.total.toFixed(2);
+      if (changed) setPhase({ kind: "changed", res });
       else onRedirect(res.invoice_url);
     } catch (e) {
       if (e instanceof ApiError && e.code === "nothing_to_buy") {
@@ -71,25 +74,22 @@ export function CheckoutView({ onRedirect = (url: string) => window.location.ass
             {lines.map((l) => (
               <div key={l.id} className="flex justify-between gap-4 text-sm">
                 <div>
-                  <p className="font-medium">{l.variant.name}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</p>
+                  <p className="font-medium">{lineName(l)}{l.quantity > 1 ? ` × ${l.quantity}` : ""}</p>
                   <p className="text-xs text-muted">
                     {isRental(l) && l.start_date && l.end_date
-                      ? `${formatDate(l.start_date)} – ${formatDate(l.end_date)} · ${rentalDays(l.start_date, l.end_date)} days · ${(l.destination_country_codes ?? []).join(", ")}`
-                      : "Travel dates: choose after payment"}
+                      ? `${formatDate(l.start_date)} – ${formatDate(l.end_date)} · ${formatPHP(totals.rate)} × ${lineDays(l)} day${lineDays(l) > 1 ? "s" : ""}`
+                      : "Starts when you activate"}
                   </p>
                   {isRental(l) && <div className="mt-1"><LockNote>Rental dates are final once ordered.</LockNote></div>}
                 </div>
-                <span className="font-semibold">{formatPHP(lineTotal(l))}</span>
+                <span className="font-semibold">{formatPHP(totals.lineTotal(l))}</span>
               </div>
             ))}
           </Card>
         </div>
         <Card className="flex h-fit flex-col gap-4 p-6">
           <h2 className="text-[17px] font-semibold">Payment</h2>
-          <div className="flex justify-between border-t border-border pt-4">
-            <span className="font-semibold">Total (PHP)</span>
-            <span className="text-2xl font-bold">{formatPHP(total)}</span>
-          </div>
+          <TotalRows totals={totals} />
           <Button size="lg" onClick={onPay} disabled={!valid || pending}>Pay with Xendit</Button>
           {!valid && <p className="text-sm text-danger">Some items need attention. <Link to="/cart" className="font-semibold">Back to cart</Link></p>}
           <p className="text-xs text-muted">You'll pay on Xendit's secure page — cards, GCash, Maya and more. Charged in PHP.</p>
@@ -112,21 +112,27 @@ function Shell({ children }: { children: React.ReactNode }) {
 function ChangedView({ res, onContinue }: { res: CheckoutResponse; onContinue: () => void }) {
   return (
     <Shell>
-      {res.price_updates.length > 0 && (
-        <Notice tone="teal" title={`We've updated your order to the latest prices. Your new total is ${formatPHP(res.order.total_amount)} — please review before paying.`}>
+      <Notice tone="teal" title={`We've updated your order to the latest prices. Your new total is ${formatPHP(res.order.total_amount)} — please review before paying.`}>
+        {res.price_updates.length > 0 && (
           <ul className="mt-2 flex flex-col gap-1">
-            {res.price_updates.map((u) => (
-              <li key={u.variant_id}>
+            {res.price_updates.map((u, i) => (
+              <li key={i}>
                 {u.name}: <span className="line-through">{formatPHP(u.old_unit_price)}</span> → <strong>{formatPHP(u.new_unit_price)}</strong>
               </li>
             ))}
           </ul>
-        </Notice>
-      )}
-      {res.removed_lines.map((r) => (
-        <Notice key={r.variant_id} tone="grey" title={`Heads up: ${r.name || "A plan"} is no longer available, so we've removed it from your order.`} />
+        )}
+      </Notice>
+      {res.removed_lines.map((r, i) => (
+        <Notice key={i} tone="grey" title={`Heads up: ${r.name || "A plan"} is no longer available, so we've removed it from your order.`} />
       ))}
       <Card className="flex flex-col gap-4 p-6 sm:max-w-md">
+        {Number(res.order.delivery_fee) > 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted">Delivery fee</span>
+            <span className="font-medium">{formatPHP(res.order.delivery_fee)}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="font-semibold">Total (PHP)</span>
           <span className="text-2xl font-bold">{formatPHP(res.order.total_amount)}</span>

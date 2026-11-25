@@ -71,14 +71,10 @@ function Paid({ order }: { order: Order }) {
             <div>
               <p className="text-sm font-semibold">{l.variant_name_snapshot}</p>
               <p className="text-xs text-muted">
-                {l.booking ? `${formatDate(l.booking.start_at)} – ${formatDate(l.booking.end_at)} · ${l.booking.destination_country_codes.join(", ")}` : "Pick when you'll use it"}
+                {l.booking ? `${formatDate(l.booking.start_at)} – ${formatDate(l.booking.end_at)} · ${l.booking.destination_country_codes.join(", ")}` : "Starts when you activate"}
               </p>
             </div>
-            {l.booking ? (
-              <StatusBadge status={l.booking.booking_status} />
-            ) : (
-              <Link to={`/account/orders/${order.id}?line=${l.id}`} className="inline-flex h-9 shrink-0 items-center rounded-button bg-primary px-4 text-sm font-semibold text-on-primary">Choose travel dates</Link>
-            )}
+            {l.booking && <StatusBadge status={l.booking.booking_status} />}
           </li>
         ))}
       </ul>
