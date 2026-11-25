@@ -9,6 +9,7 @@ export function Shell() {
     ["/orders", "Orders"],
     ["/bookings", "Bookings"],
     ["/products", "Products (CMS)"],
+    ["/regions", "Regions & prices"],
     ...(isAdmin ? ([["/users", "Users"]] as Array<[string, string]>) : []),
   ];
   return (

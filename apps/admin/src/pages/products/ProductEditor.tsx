@@ -1,4 +1,4 @@
-import type { StaffProduct, StaffVariant } from "@air-roam/api";
+import type { StaffProduct } from "@air-roam/api";
 import { Button, Card, Field } from "@air-roam/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -8,8 +8,6 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { errorMessage, toFieldErrors } from "../../lib/errors";
 import { PRODUCT_TYPES } from "../../lib/options";
 import { ThumbnailUpload } from "./ThumbnailUpload";
-import { VariantForm, type VariantPayload } from "./VariantForm";
-import { VariantTable } from "./VariantTable";
 
 type Draft = { product_name: string; product_type: string; product_description: string; is_active: boolean };
 
@@ -23,7 +21,6 @@ export function ProductEditor() {
   const [draft, setDraft] = useState<Draft>({ product_name: "", product_type: "esim", product_description: "", is_active: true });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
-  const [editing, setEditing] = useState<StaffVariant | "new" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -50,17 +47,6 @@ export function ProductEditor() {
     } catch (err) {
       setErrors(toFieldErrors(err).fields);
     }
-  }
-
-  async function saveVariant(p: VariantPayload) {
-    try {
-      if (editing === "new") await client.request(`staff/products/${id}/variants`, { method: "POST", json: p });
-      else if (editing) await client.request(`staff/products/${id}/variants/${editing.id}`, { method: "PATCH", json: p });
-    } catch (err) {
-      throw toFieldErrors(err);
-    }
-    setEditing(null);
-    await refresh();
   }
 
   async function run(action: () => Promise<unknown>) {
@@ -105,7 +91,7 @@ export function ProductEditor() {
           {confirmDelete && (
             <ConfirmDialog
               title={`Delete ${draft.product_name}?`}
-              message="The product and its plans disappear from the store. Past orders are kept."
+              message="The product disappears from the store. Past orders are kept."
               onConfirm={() => run(async () => { await client.request(`staff/products/${id}`, { method: "DELETE" }); navigate("/products"); })}
               onCancel={() => setConfirmDelete(false)}
             />
@@ -113,19 +99,7 @@ export function ProductEditor() {
         </form>
       </Card>
 
-      {!isNew && product && (
-        <Card className="flex flex-col gap-4 p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Plans</h2>
-            {!editing && <Button size="sm" onClick={() => setEditing("new")}>Add plan</Button>}
-          </div>
-          {editing ? (
-            <VariantForm key={editing === "new" ? "new" : editing.id} initial={editing === "new" ? null : editing} productType={draft.product_type} onSave={saveVariant} onCancel={() => setEditing(null)} />
-          ) : (
-            <VariantTable variants={product.variants} productType={draft.product_type} onEdit={setEditing} onDelete={(vid) => run(() => client.request(`staff/products/${id}/variants/${vid}`, { method: "DELETE" }))} />
-          )}
-        </Card>
-      )}
+      <p className="text-sm text-muted">Prices, data and validity come from <Link to="/regions" className="font-semibold text-primary">Regions & prices</Link>.</p>
     </div>
   );
 }
