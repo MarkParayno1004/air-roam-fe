@@ -37,40 +37,43 @@ export function ProductCard({ product, destinations, initialCountry = "", onAdd 
         <h3 className="text-[17px] font-semibold">{product.product_name}</h3>
         {product.product_description && <p className="text-[13px] text-muted">{product.product_description}</p>}
       </div>
-      <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Country
-        <select
-          value={here ? country : ""}
-          onChange={(e) => {
-            setCountry(e.target.value);
-            setPlanId("");
-          }}
-          className="h-11 rounded-input border border-border bg-surface px-3 text-sm font-normal outline-none focus:border-primary"
-        >
-          <option value="">Choose a country</option>
-          {sold.map((d) => <option key={d.country_code} value={d.country_code}>{d.country_name}</option>)}
-        </select>
-      </label>
+      {/* pre-rendered: a choice made before hydration would show as picked but be lost */}
+      <fieldset disabled={!today} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5 text-sm font-medium">
+          Country
+          <select
+            value={here ? country : ""}
+            onChange={(e) => {
+              setCountry(e.target.value);
+              setPlanId("");
+            }}
+            className="h-11 rounded-input border border-border bg-surface px-3 text-sm font-normal outline-none focus:border-primary"
+          >
+            <option value="">Choose a country</option>
+            {sold.map((d) => <option key={d.country_code} value={d.country_code}>{d.country_name}</option>)}
+          </select>
+        </label>
 
-      {here && !wifi && (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-sm font-medium">Plan</legend>
-          <div className="flex flex-wrap gap-2">
-            {here.plans.map((p) => (
-              <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded-input border border-border px-3 py-2 text-sm has-checked:border-primary has-checked:bg-primary-soft">
-                <input type="radio" name={`${id}-plan`} className="accent-primary" checked={p.id === planId} onChange={() => setPlanId(p.id)} />
-                {p.label}
-              </label>
-            ))}
+        {here && !wifi && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium">Plan</legend>
+            <div className="flex flex-wrap gap-2">
+              {here.plans.map((p) => (
+                <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded-input border border-border px-3 py-2 text-sm has-checked:border-primary has-checked:bg-primary-soft">
+                  <input type="radio" name={`${id}-plan`} className="accent-primary" checked={p.id === planId} onChange={() => setPlanId(p.id)} />
+                  {p.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        {here && wifi && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DateField label="Start date" value={start} min={today} onChange={setStart} />
+            <DateField label="End date" value={end} min={start || today} onChange={setEnd} />
           </div>
-        </fieldset>
-      )}
-      {here && wifi && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DateField label="Start date" value={start} min={today} onChange={setStart} />
-          <DateField label="End date" value={end} min={start || today} onChange={setEnd} />
-        </div>
-      )}
+        )}
+      </fieldset>
       {wifi && start && end && problem && <p role="alert" className="text-sm text-danger">{problem}</p>}
 
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-2">
