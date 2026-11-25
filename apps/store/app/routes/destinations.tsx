@@ -25,7 +25,7 @@ export default function Destinations() {
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 md:px-10">
       <div>
         <h1 className="text-3xl font-bold md:text-4xl">Destinations</h1>
-        <p className="mt-2 text-muted">{data.length} countries covered by single-country plans or multi-country packs.</p>
+        <p className="mt-2 text-muted">{data.length} countries covered by eSIM, SIM and Pocket WiFi.</p>
       </div>
       <label htmlFor="dest-search" className="sr-only">Search destinations</label>
       <input

@@ -1,6 +1,6 @@
 // Used by react-router.config.ts at build time (plain Node; no Vite-only imports here).
 
-export const STATIC_PATHS = ["/", "/destinations", "/multi-country", "/terms", "/privacy", "/refund-policy", "/contact"];
+export const STATIC_PATHS = ["/", "/destinations", "/products", "/terms", "/privacy", "/refund-policy", "/contact"];
 
 type Env = Record<string, string | undefined>;
 

@@ -6,7 +6,7 @@ import { Logo } from "./Logo";
 
 const NAV = [
   ["/destinations", "Destinations"],
-  ["/multi-country", "Multi-country"],
+  ["/products", "Products"],
   ["/contact", "Help"],
 ] as const;
 

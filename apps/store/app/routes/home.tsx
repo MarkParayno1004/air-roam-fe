@@ -1,16 +1,14 @@
-import { Card, PackCard } from "@air-roam/ui";
+import { Card } from "@air-roam/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useLoaderData, useNavigate, type ClientLoaderFunctionArgs } from "react-router";
 import { liveOrPrerendered } from "../lib/loaders";
 import { PopularDestinations } from "../catalog/PopularDestinations";
-import { useAddToCart } from "../catalog/useAddToCart";
-import { fetchDestinations, fetchPacks, packVariants } from "../lib/catalog";
+import { fetchDestinations } from "../lib/catalog";
 import { buildMeta } from "../seo/meta";
 
 async function load() {
-  const [destinations, packs] = await Promise.all([fetchDestinations(), fetchPacks()]);
-  return { destinations, packs };
+  return { destinations: await fetchDestinations() };
 }
 export const loader = load; // build time (pre-render)
 export const clientLoader = ({ serverLoader }: ClientLoaderFunctionArgs) => liveOrPrerendered(load, () => serverLoader<Awaited<ReturnType<typeof load>>>());
@@ -31,7 +29,7 @@ const TYPES = [
 const STEPS = [
   ["1  Choose a plan", "Pick a destination and an eSIM, SIM or Pocket WiFi."],
   ["2  Pay with Xendit", "Cards, GCash, Maya and more — charged in PHP."],
-  ["3  Pick your travel dates", "Pocket WiFi dates at checkout; eSIM/SIM after payment."],
+  ["3  Connect", "Pocket WiFi is booked for your dates; eSIM and SIM start on activation."],
 ] as const;
 
 export default function Home() {
@@ -39,8 +37,6 @@ export default function Home() {
   const { data } = useQuery({ queryKey: ["home"], queryFn: load, initialData: initial });
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const add = useAddToCart();
-  const packs = packVariants(data.packs).flatMap((g) => g.packs).slice(0, 3);
 
   return (
     <>
@@ -92,21 +88,6 @@ export default function Home() {
           </div>
           <PopularDestinations destinations={data.destinations} />
         </section>
-
-        {packs.length > 0 && (
-          <section aria-labelledby="packs" className="flex flex-col gap-5">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 id="packs" className="text-2xl font-bold">Multi-country packs</h2>
-                <p className="text-sm text-muted">One plan for a trip across 2 or more countries</p>
-              </div>
-              <Link to="/multi-country" className="text-sm font-semibold text-primary">See all multi-country packs</Link>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {packs.map((v) => <PackCard key={v.id} variant={v} onAdd={add} />)}
-            </div>
-          </section>
-        )}
 
         <section aria-labelledby="how" className="flex flex-col gap-5">
           <h2 id="how" className="text-2xl font-bold">How it works</h2>

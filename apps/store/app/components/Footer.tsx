@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { Logo } from "./Logo";
 
 const COLS = [
-  ["Shop", [["/destinations", "Destinations"], ["/multi-country", "Multi-country packs"]]],
+  ["Shop", [["/destinations", "Destinations"], ["/products", "Products"]]],
   ["Help", [["/contact", "Contact us"], ["/refund-policy", "Refund policy"]]],
   ["Legal", [["/terms", "Terms of service"], ["/privacy", "Privacy policy"]]],
 ] as const;

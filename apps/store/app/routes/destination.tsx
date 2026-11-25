@@ -19,10 +19,10 @@ export const meta = ({ data }: { data?: Data }) =>
     ? [
         ...buildMeta({
           title: destinationTitle(data.destination.country_name, data.destination.from_price),
-          description: `Roaming data for ${data.destination.country_name}: eSIM, SIM and Pocket WiFi rental from Air Roam, plus multi-country packs. Pay in PHP.`,
+          description: `Roaming data for ${data.destination.country_name}: eSIM, SIM and Pocket WiFi rental from Air Roam. Pay in PHP.`,
           path: `/destinations/${data.destination.slug}`,
         }),
-        { "script:ld+json": productJsonLd(data.destination, data.variants) },
+        { "script:ld+json": productJsonLd(data.destination) },
       ]
     : [{ title: "Destination not found · Air Roam" }];
 
@@ -33,5 +33,5 @@ export default function Destination() {
     queryFn: () => fetchDestinationPage(initial.destination.slug),
     initialData: initial,
   });
-  return <DestinationView destination={data.destination} variants={data.variants} onAdd={useAddToCart()} />;
+  return <DestinationView {...data} onAdd={useAddToCart()} />;
 }
